@@ -1,0 +1,591 @@
+RPB Boundary Evidence
+02_Boundary_Returned_Detail
+Version: v0.2
+
+==================================================
+1. 目的
+==================================================
+
+本Evidenceは、RPB Boundary Chapterにおける
+「Boundary Returned Detail」の観測記録である。
+
+ここで確認したいのは、
+
+「Boundary付近でRequestしたとき、
+実際にどのようなReturned Resultが返ってくるのか？」
+
+という問いである。
+
+01_History_Boundary_Movementでは、
+Boundary位置そのものの変化とHistory Stateを観測した。
+
+02ではそこから一段進み、
+Requestの結果として返ってきたデータそのものを観測する。
+
+特に、
+
+- ReturnedFirst
+- ReturnedLast
+- ReturnedBars
+- Returned Range
+- TargetIncluded
+
+を分離して記録する。
+
+
+==================================================
+2. 研究上の位置づけ
+==================================================
+
+Boundary Chapterでは、次の4つを別々の観測ラインとして扱う。
+
+01. History Boundary Movement
+    Boundary付近の観測位置に変化が生じるのかを見る。
+
+02. Boundary Returned Detail
+    Boundary付近で、どのようなReturned Resultが得られるのかを見る。
+
+03. Boundary Returned Series
+    Boundary前後で、Returned Seriesそのものに違いがあるのかを見る。
+
+04. Boundary Transition Series
+    失敗側から成功側へ移る過程で、
+    Returned Result / Seriesがどう変化するのかを見る。
+
+02はこのうち、
+「返ってきたデータの詳細」に集中する。
+
+
+==================================================
+3. 観測対象
+==================================================
+
+今回のReturned Detailでは、次の項目を観測対象とする。
+
+ReturnedFirst:
+    返却されたデータの最初のbar時刻
+
+ReturnedLast:
+    返却されたデータの最後のbar時刻
+
+ReturnedBars:
+    実際に返却されたbar本数
+
+Returned Range:
+    ReturnedFirstからReturnedLastまでの時間範囲
+
+TargetIncluded:
+    RequestしたTargetTimeがReturned Range内に含まれるか
+
+また、Access Resultとして、
+
+- Request Success / Failure
+- Error Code
+- RequestStart
+
+も記録対象とする。
+
+
+==================================================
+4. 元Evidenceと実験設計
+==================================================
+
+02の設計は、
+専用の
+
+HOBS_RPB_BoundaryReturnedDetail_Test.mq5
+
+に基づく。
+
+このテストでは、
+
+Symbol:
+BTCUSDT_HOBS_TEST
+
+Timeframe:
+M1
+
+TargetTime:
+2026.07.01 00:00:00
+
+RequestedBars:
+10
+
+Attempts:
+各位置120回
+
+Boundary-relative RequestStart:
+-1秒
+0秒
++1秒
+
+を独立した観測位置として設定している。
+
+観測対象は、
+ReturnedFirst / ReturnedLast / ReturnedRangeを中心とし、
+TargetIncludedおよびHistory Stateも同時に記録する。
+
+この設計では、
+Returned RangeとHistory Stateを独立して評価する。
+
+
+==================================================
+5. Boundary付近のAccess Result
+==================================================
+
+Boundary Chapterの代表的な観測では、
+
+-1秒:
+    Request Failure
+    Error 4401
+
+0秒:
+    Request Success
+
++1秒:
+    Request Success
+
+というAccess Resultの変化が確認されている。
+
+この結果は、
+Boundary付近にRequestの成功・失敗が切り替わる領域が
+観測されたことを示す。
+
+ただし、後続の別条件・別Evidenceでは
+0秒の取得結果が異なる観測も存在する。
+
+したがって、
+ここでの結果は特定の観測条件における結果として扱い、
+すべての条件へ一般化しない。
+
+
+==================================================
+6. Returned Rangeの観測
+==================================================
+
+Boundary Chapterの代表的な観測条件では、
+
+0秒:
+    Request Success
+    Returned Range取得
+
++1秒:
+    Request Success
+    Returned Range取得
+
+となり、
+0秒と+1秒のReturned Rangeは同じだった。
+
+このことから、
+
+「Requestが成功した」
+ことと、
+
+「Returned Rangeが別の範囲へ変化した」
+ことは、
+
+別々の観測事項として扱う。
+
+
+==================================================
+7. ReturnedBarsの具体例
+==================================================
+
+Returned Detailの元設計では、
+ReturnedBarsを直接記録する。
+
+なお、以下は02そのものの実験結果ではなく、
+B章の関連Evidenceにおける観測である。
+
+B-4では、
+
+RequestStart:
+    Boundary -1秒 / 0秒 / +1秒
+
+RequestedBars:
+    1 / 5 / 10 / 20
+
+という条件で観測され、
+
+-1秒:
+    全て失敗
+
+0秒:
+    全て成功
+
++1秒:
+    全て成功
+
+という結果が整理されている。
+
+さらに、Boundary直近の0秒・+1秒では、
+RequestedBarsを増やしても
+Returned Rangeは1本に制約された。
+
+したがって、
+
+RequestedBars
+    ≠
+ReturnedBars
+
+となる観測が存在する。
+
+これは「要求した本数」と
+「実際に返った本数」を
+別の観測値として扱う必要があることを示す。
+
+
+==================================================
+8. Returned Rangeの時間構造
+==================================================
+
+B章の関連するBar-Boundary観測では、
+RequestStart位置の変化に伴って
+ReturnedBarsが段階的に変化する結果が観測されている。
+
+具体的には、
+
+RequestStart位置:
+    0 / 1 / 30 / 59 / 60 / 61 / 119 / 120秒
+
+の観測において、
+
+0〜59秒:
+    ReturnedBars = 1
+
+60〜119秒:
+    ReturnedBars = 2
+
+120秒:
+    ReturnedBars = 3
+
+というReturnedBarsの変化が記録されている。
+
+以下はいずれもB章の関連Evidenceにおける代表ログである。
+
+代表ログ1:
+
+RequestStart:
+    2026.07.01 00:01:00
+
+ReturnedFirst:
+    2026.07.01 00:00:00
+
+ReturnedLast:
+    2026.07.01 00:01:00
+
+ReturnedBars:
+    2
+
+ReturnedSpan:
+    60秒
+
+TargetIncluded:
+    true
+
+代表ログ2:
+
+RequestStart:
+    2026.07.01 00:00:01
+
+ReturnedFirst:
+    2026.07.01 00:00:00
+
+ReturnedLast:
+    2026.07.01 00:00:00
+
+ReturnedBars:
+    1
+
+ReturnedSpan:
+    0秒
+
+TargetIncluded:
+    true
+
+これらは、
+Returned Rangeが単純にRequestedBarsの値だけで
+決まるわけではなく、
+返却されたbarの時刻列として観測できることを示す。
+
+
+==================================================
+9. TargetIncluded
+==================================================
+
+TargetIncludedは、
+Returned Rangeの中にTargetTimeが含まれているかを
+記録する項目である。
+
+元のBoundaryReturnedDetailテストでは、
+TargetIncludedを独立した観測値として記録する設計になっている。
+
+関連するB章の代表ログでは、
+
+TargetIncluded:
+    true
+
+が観測されている。
+
+したがって、
+Targetが含まれているかどうかも、
+ReturnedBarsやReturnedSpanとは別の観測項目として扱う。
+
+
+==================================================
+10. Returned DetailとHistory State
+==================================================
+
+ここで重要なのは、
+
+Returned Detail
+    と
+History State
+
+を同一視しないことである。
+
+Returned Detail側では、
+
+- ReturnedFirst
+- ReturnedLast
+- ReturnedBars
+- Returned Range
+- TargetIncluded
+
+が変化する可能性がある。
+
+一方、History State側では、
+
+- SERIES_FIRSTDATE
+- SERIES_BARS_COUNT
+- SERIES_SYNCHRONIZED
+
+を別に観測する。
+
+B章の関連Evidenceでは、
+Returned Rangeの変化が観測されても、
+
+History State
+    FIRSTDATE / BARS_COUNT / SYNCHRONIZED
+
+には変化が確認されていない。
+
+したがって、
+
+Returned Rangeの変化
+    ↓
+History Expansion
+
+とは扱わない。
+
+
+==================================================
+11. 観測されたこと
+==================================================
+
+今回確認できた観測事項を整理する。
+
+1. Boundary付近では、
+   Request Success / Failureが変化する観測がある。
+
+2. 代表的なBoundary観測では、
+   -1秒がFailure（4401）、
+   0秒と+1秒がSuccessとなった。
+
+3. Boundary Chapterの代表的な観測条件では、
+   0秒と+1秒のReturned Rangeは同じだった。
+
+4. RequestedBarsとReturnedBarsは、
+   必ずしも一致しない。
+
+5. B章の関連Evidenceでは、
+   RequestStart位置の変化に伴ってReturnedBarsが
+   1 → 2 → 3と段階的に変化する観測がある。
+
+6. ReturnedFirst / ReturnedLast / ReturnedBars /
+   ReturnedSpan / TargetIncludedは、
+   Returned Resultを構成する独立した観測項目として扱える。
+
+7. Returned Rangeの変化とHistory Stateの変化は、
+   別々に観測される。
+
+
+==================================================
+12. 条件差・再現性について
+==================================================
+
+Boundary観測では、
+同じ0秒という位置表現であっても、
+別の実験条件・別Evidenceでは
+取得結果が異なる観測が存在する。
+
+そのため、
+
+「0秒なら必ずSuccess」
+
+や、
+
+「Boundaryを越えれば必ずReturned Rangeが拡大する」
+
+とは結論しない。
+
+RPBでは、
+
+実験条件
+    ↓
+Access Result
+    ↓
+Returned Detail
+
+という対応関係を保持する。
+
+過去観測と現在観測が一致しない場合も、
+過去の観測を直ちに否定せず、
+条件差・再現性の問題として別途保持する。
+
+
+==================================================
+13. まだ分かっていないこと
+==================================================
+
+今回のEvidenceだけでは、
+以下は確定できない。
+
+- Returned Rangeが内部でどのように形成されるか
+- Error 4401の内部的な発生理由
+- Returned Range形成とHistory Expansionの内部的関係
+- どの条件でReturned Rangeが拡大するのか
+- TargetIncludedが変化する内部条件
+- Boundary付近のAccess Resultを決定する内部機構
+
+したがって、
+Returned Detailを観測できたことから
+MT5内部の処理機構を推定して確定することはしない。
+
+
+==================================================
+14. Observation Candidate
+==================================================
+
+今回のBoundary Returned Detailでは、
+
+「Boundary付近のRequestに対して、
+ReturnedFirst / ReturnedLast / ReturnedBars /
+Returned Range / TargetIncludedを
+独立した観測対象として記録できる」
+
+ことを整理した。
+
+また、
+
+「RequestedBarsとReturnedBarsは一致しない場合がある」
+
+こと、
+
+「Boundary付近のAccess Resultが変化しても、
+Returned RangeとHistory Stateは別々に観測する必要がある」
+
+ことをEvidenceとして保持する。
+
+本結果は、
+Boundary Returned Detailにおける
+Observation Candidateとして扱う。
+
+
+==================================================
+15. Evidenceとしての位置づけ
+==================================================
+
+本Evidenceは、
+
+Boundary Chapter
+└── 02_Boundary_Returned_Detail
+
+に属する。
+
+関連Evidenceとして、
+
+- HOBS_RPB_BoundaryReturnedDetail_Test.mq5
+- B-4 Boundary × RequestedBars
+- B-6 Bar-Boundary Test
+- Boundary Chapter Summary
+
+を参照する。
+
+ただし、各Evidenceはそれぞれ異なる実験条件を持つため、
+結果を無条件に統合しない。
+
+
+==================================================
+16. 結論
+==================================================
+
+Boundary付近では、
+Requestの成功・失敗だけでなく、
+実際に返却されたデータの構造を観測することができる。
+
+ReturnedFirst
+ReturnedLast
+ReturnedBars
+Returned Range
+TargetIncluded
+
+を分離して記録することで、
+
+「何を要求したか」
+
+と
+
+「何が返ってきたか」
+
+を別々に扱える。
+
+さらに、
+
+「何が返ってきたか」
+
+と
+
+「MT5のHistory Stateが変化したか」
+
+も別々に扱う。
+
+したがって現時点では、
+
+Request条件
+    ↓
+Access Result
+    ↓
+Returned Detail
+
+と、
+
+History State
+
+を分離したまま研究を継続する。
+
+本Evidenceは、
+Boundary付近におけるReturned Resultの詳細構造を
+観測対象として固定するための記録である。
+
+
+==================================================
+Document Status
+==================================================
+
+Document:
+RPB Boundary 02_Boundary_Returned_Detail
+
+Version:
+v0.2
+
+Status:
+COMPLETED / Observation Candidate
+
+Scope:
+Boundary Returned Detail
+
+Important:
+本資料は確認できた実験記録・ログ・関連Evidenceに基づく
+観測結果を整理したものであり、
+MT5内部仕様やHistory Expansionの一般則を確定するものではない。
