@@ -1,0 +1,338 @@
+RPB Boundary Evidence
+01_History_Boundary_Movement
+Version: v0.1
+
+==================================================
+1. 目的
+==================================================
+
+本Evidenceは、RPB Boundary Chapterにおける
+「History Boundary Movement」の観測記録である。
+
+ここで確認したいのは、
+
+「SERIES_FIRSTDATEを基準として観測しているBoundary付近に、
+実験中の変化が生じるのか？」
+
+という問いである。
+
+本資料では、BoundaryがMT5内部で絶対的に存在することや、
+Boundaryが絶対に動かないことを証明するものではない。
+
+今回の実験条件において、
+観測されたBoundary位置とReturned Result、
+History Stateにどのような変化が現れたかを記録する。
+
+
+==================================================
+2. 研究上の位置づけ
+==================================================
+
+Boundary Chapterは、
+
+「過去データをRequestしたとき、
+どこでAccess Resultが変化するのか」
+
+を観測する研究である。
+
+その中でHistory Boundary Movementは、
+
+「観測対象として設定したBoundary位置そのものに
+変化が生じるのか」
+
+を確認する観測ラインである。
+
+重要なのは、
+
+Boundary付近のRequestが成功・失敗することと、
+History Stateが変化することを同一視しないことである。
+
+
+==================================================
+3. 実験条件
+==================================================
+
+Symbol:
+BTCUSDT
+
+Timeframe:
+M1
+
+TargetTime:
+2026.07.01 00:00:00
+
+RequestedTargetBars:
+210
+
+Fixed RequestStart:
+SERIES_FIRSTDATE - 600秒
+
+Fixed Target Request:
+120 attempts
+
+Boundary Probe Offset:
+1秒
+60秒
+600秒
+3600秒
+86400秒
+604800秒
+2592000秒
+
+
+==================================================
+4. 実験方法
+==================================================
+
+まず、SERIES_FIRSTDATEを基準として
+Boundary付近の時間位置を設定する。
+
+そのうえで、
+
+1. 固定したRequestStartからTargetTimeをRequestする
+2. 同じ条件を複数回繰り返す
+3. Boundary付近について、複数の時間オフセットからProbeする
+4. Returned Resultを記録する
+5. SERIES_FIRSTDATE等のHistory Stateを前後で比較する
+
+という方法で観測した。
+
+この実験では、
+「Requestが成功したかどうか」だけではなく、
+
+- Returned Range
+- Returned Result
+- History State
+- Boundary位置の変化
+
+を分離して記録する。
+
+
+==================================================
+5. 固定Target Requestの結果
+==================================================
+
+固定したRequestStartからTargetTimeをRequestした結果、
+
+Attempts:
+120
+
+Success:
+120
+
+Failure:
+0
+
+であった。
+
+固定Targetについて、
+Returned Rangeには変化が観測されなかった。
+
+
+==================================================
+6. History Stateの観測
+==================================================
+
+固定Target Requestの前後で、
+History Stateに関係する観測値を比較した。
+
+今回の観測条件では、
+
+- HistoryBoundaryChangedEvents: 0
+- HistoryGrowthEvents: 0
+
+であった。
+
+したがって、
+今回の実験では固定Target Requestを繰り返しても、
+観測対象として設定したBoundary位置の変化や
+History Growthは確認されなかった。
+
+
+==================================================
+7. Boundary Probeの結果
+==================================================
+
+Boundary付近について、
+
+1秒
+60秒
+600秒
+3600秒
+86400秒
+604800秒
+2592000秒
+
+の各オフセットを用いてProbeを行った。
+
+Boundaryの前後に相当するRequestでは、
+過去側のRequestが取得不成立となり、
+Error 4401が観測されたケースがあった。
+
+一方で、
+観測されたFirstDate自体には変化が確認されなかった。
+
+このことから今回の条件では、
+
+「Boundary付近でRequestのAccess Resultが変化する」
+
+ことは観測されたが、
+
+「その変化によってBoundary位置が移動する」
+
+ことは確認されなかった。
+
+
+==================================================
+8. Returned ResultとHistory Stateの分離
+==================================================
+
+今回の観測で重要なのは、
+Requestの成功・失敗とHistory Stateを分離して考えることである。
+
+Requestが成功することは、
+データが返却されたことを示す。
+
+しかし、
+
+Request Success
+    ↓
+History Expansion
+
+が自動的に成立するとは限らない。
+
+今回のHistory Boundary Movement観測では、
+Requestの結果に変化が存在しても、
+History Stateの成長やBoundary位置の変化は確認されなかった。
+
+
+==================================================
+9. 観測されたこと
+==================================================
+
+今回の条件で確認できたことは以下である。
+
+1. SERIES_FIRSTDATEを基準としたBoundary付近では、
+   Requestの成功・失敗が変化する領域が観測された。
+
+2. 固定Target Requestは120回すべて成功した。
+
+3. 固定TargetのReturned Rangeには変化が観測されなかった。
+
+4. HistoryBoundaryChangedEventsは0であった。
+
+5. HistoryGrowthEventsは0であった。
+
+6. Boundary ProbeによってAccess Resultの違いは観測されたが、
+   FirstDateの変化は確認されなかった。
+
+
+==================================================
+10. まだ分かっていないこと
+==================================================
+
+今回のEvidenceだけでは、以下は確定できない。
+
+- MT5内部でBoundaryがどのように管理されているか
+- どの条件でHistory Expansionが発生するのか
+- Request SuccessがHistory Expansionを引き起こす条件
+- Boundary位置が別の条件で変化する可能性
+- Error 4401の内部的な発生理由
+
+したがって、
+
+「Boundaryは絶対に動かない」
+
+とは結論しない。
+
+
+==================================================
+11. Observation Candidate
+==================================================
+
+今回の実験条件では、
+
+「観測されたBoundary位置に変化は確認されなかった」
+
+という結果をObservation Candidateとして記録する。
+
+また、
+
+「Boundary付近のRequest条件によってAccess Resultは変化し得るが、
+そのことだけではHistory ExpansionやBoundary Movementを示さない」
+
+という整理を行う。
+
+これはHistory Expansion Conditionそのものの解明ではない。
+
+BoundaryのAccess ResultとHistory Stateを
+別々の観測対象として扱うためのEvidenceである。
+
+
+==================================================
+12. Evidenceとしての位置づけ
+==================================================
+
+本Evidenceは、
+
+Boundary Chapter
+└── 01_History_Boundary_Movement
+
+に属する。
+
+後続の、
+
+02_Boundary_Returned_Detail
+03_Boundary_Returned_Series
+04_Boundary_Transition_Series
+
+と合わせてBoundary Chapter全体を構成する。
+
+また、B / C / D Chapterでは、
+Returned Range、History Expansion Condition、
+Target-side Dependencyを別の観測軸として扱う。
+
+
+==================================================
+13. 結論
+==================================================
+
+今回のHistory Boundary Movement観測では、
+
+「SERIES_FIRSTDATEを基準として観測したBoundary付近について、
+実験中にBoundary位置が変化する現象は確認されなかった。」
+
+一方で、
+
+「Boundary付近のRequest条件によってAccess Resultが変化する」
+
+ことは観測された。
+
+したがって現時点では、
+
+Access Result
+    ≠
+History State
+    ≠
+History Expansion
+
+として扱う。
+
+本結果はObservation Candidateとして保存し、
+History Expansionの発生条件については
+後続のC Chapterで引き続き検証する。
+
+
+==================================================
+Document Status
+==================================================
+
+Status:
+COMPLETED / Observation Candidate
+
+Scope:
+History Boundary Movement
+
+Important:
+本資料は今回の実験条件における観測結果を記録するものであり、
+MT5の内部仕様やHistory Expansionの一般則を確定するものではない。
