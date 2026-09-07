@@ -1,0 +1,594 @@
+RPB Boundary Chapter
+Evidence・再現性 詳細入口
+v0.2
+
+============================================================
+1. この章の役割
+============================================================
+
+Level 5では、
+「Evidenceをどう読むのか」
+「再現性をどう扱うのか」
+を整理した。
+
+ここからは、実際の研究Evidenceへ降りていく。
+
+最初に扱うのがBoundaryである。
+
+Boundary章の問いは、
+
+「SERIES_FIRSTDATEを基準としたBoundary付近では、
+Requestすると何が起きるのか？」
+
+である。
+
+この章では、History Expansionそのものを
+最初から説明しようとはしない。
+
+まず、Boundary付近で観測できる
+Access ResultとReturned Dataの変化を確認する。
+
+そのうえで、
+History Stateに変化があったのかを分離して観測する。
+
+
+============================================================
+2. Boundaryで見ているもの
+============================================================
+
+Boundaryでは、主に次の観測対象を分けて扱う。
+
+【Access Result】
+
+・Requestが成功したか
+・Requestが失敗したか
+・Returned Bars
+・Returned First
+・Returned Last
+・Returned Range
+・Returned Series
+
+【History State】
+
+・SERIES_FIRSTDATE
+・SERIES_BARS_COUNT
+・SERIES_SYNCHRONIZED
+・History Stateの変化
+
+重要なのは、
+
+Access Resultが変化した
+＝
+History Stateが変化した
+
+とは考えないことである。
+
+Boundary章では、
+この二つを分離したまま観測する。
+
+
+============================================================
+3. Boundary章で最初に確認されたこと
+============================================================
+
+Boundary付近では、
+Requestの成功・失敗が変化する。
+
+これにより、
+
+「どこからRequestの結果が変わるのか？」
+
+というAccess上の境界を観測対象として
+扱うことができる。
+
+一方で、
+
+「Accessの境界を越えた」
+＝
+「History Expansionが起きた」
+
+とは確定していない。
+
+ここがBoundary研究の重要な出発点である。
+
+
+============================================================
+4. Boundary章の4つの観測ライン
+============================================================
+
+Boundary研究は、次の4つに分けて整理する。
+
+01. History Boundary Movement
+
+Boundaryそのものが移動するのかを見る。
+
+02. Boundary Returned Detail
+
+Boundary付近で、どのようなデータが返るのかを見る。
+
+03. Boundary Returned Series
+
+Boundary前後で、Returned Seriesに違いがあるのかを見る。
+
+04. Boundary Transition Series
+
+Boundaryをまたぐ過程で、
+Access ResultやReturned Seriesが
+どのように変化するのかを見る。
+
+4つは関連しているが、
+同じ観測ではない。
+
+それぞれ別のEvidenceとして保持する。
+
+
+============================================================
+5. History Boundary Movement
+============================================================
+
+この観測では、
+
+「Boundary付近へのRequestを繰り返したとき、
+観測されているBoundary位置に変化が生じるのか？」
+
+を調べた。
+
+観測対象には、
+
+・SERIES_FIRSTDATE
+・SERIES_BARS_COUNT
+・SERIES_SYNCHRONIZED
+・Returned Range
+
+などを含める。
+
+現在のBoundary Movement観測では、
+固定したTargetへのRequestを繰り返しても、
+History Boundaryの移動は確認されていない。
+
+また、
+固定TargetのReturned Rangeにも
+変化は確認されていない。
+
+ただし、これは
+
+「History Boundaryは絶対に動かない」
+
+という結論ではない。
+
+あくまで、
+今回の試験条件で移動が観測されなかった、
+という位置づけである。
+
+
+============================================================
+6. Boundary Returned Detail
+============================================================
+
+ここでは、
+
+「Boundary付近では、
+実際に何本のデータが返ってくるのか？」
+
+というAccess Result側の詳細を見る。
+
+Boundary付近では、
+Requestの位置によって
+成功・失敗が変化する。
+
+また、成功した場合でも、
+要求した本数と実際に返った本数が
+一致するとは限らない。
+
+したがって、
+
+RequestedBars
+と
+ReturnedBars
+
+を分けて記録する。
+
+この観測は、
+Returned Range Formationへ進むB章ともつながる。
+
+
+============================================================
+7. Boundary Returned Series
+============================================================
+
+ここでは、
+
+「Boundaryの前後で、
+返ってくるSeriesそのものに違いがあるのか？」
+
+を見る。
+
+特に、
+
+・Returned First
+・Returned Last
+・Returned Bars
+・Returned Range
+・rates[].time
+
+などを比較対象とする。
+
+現在のBoundary観測では、
+境界付近の成功側について、
+Returned Seriesが同一となる条件が確認されている。
+
+つまり、
+
+Request位置が境界の前後にある
+
+というだけでは、
+Returned Seriesが必ず変化するとは限らない。
+
+ここでも、
+Request条件とReturned Resultを
+分けて記録することが重要になる。
+
+
+============================================================
+8. Boundary Transition Series
+============================================================
+
+Boundary Transitionでは、
+
+「失敗側から成功側へ移るとき、
+Access Resultはどのように変化するのか？」
+
+を観測する。
+
+Boundary付近の代表的な初期観測では、
+
+-1秒
+  Request失敗
+
+0秒
+  Request成功
+
++1秒
+  Request成功
+
+というAccess Resultの変化が確認された。
+
+また、今回のBoundary観測条件では、
+0秒と+1秒のReturned Rangeは同じだった。
+
+ただし、後続の別条件・別Evidenceでは、
+0秒の取得結果が異なる観測も存在する。
+
+したがって、この結果は
+「Boundary付近の一つの観測条件における結果」
+として扱い、
+すべての実験条件に一般化しない。
+
+この結果から、
+
+「Boundaryを越えれば、
+Returned Rangeが必ず拡大する」
+
+とは言えない。
+
+観測できるのは、
+まずAccess Resultの変化である。
+
+
+============================================================
+9. Boundary研究で重要な区別
+============================================================
+
+Boundary研究では、次の3つを分ける。
+
+① Requestの成功・失敗
+
+② Returned Dataの変化
+
+③ History Stateの変化
+
+たとえば、
+
+Requestが成功した。
+
+↓
+
+データが返ってきた。
+
+↓
+
+Returned Rangeが確認できた。
+
+ここまではAccess Result側の観測である。
+
+そこから、
+
+SERIES_FIRSTDATEが変わった
+SERIES_BARS_COUNTが増えた
+History Stateが変化した
+
+となれば、
+初めてHistory State側の変化として観測できる。
+
+したがって、
+
+Request Success
+↓
+Returned Result
+↓
+History State
+
+という順序で観測し、
+途中の段階を飛ばして解釈しない。
+
+
+============================================================
+10. BoundaryとHistory Expansion
+============================================================
+
+Boundary研究から、
+
+「Access Boundaryは存在する」
+
+という観測対象を整理できる。
+
+しかし、
+
+「Boundary付近のRequest条件が
+History Expansionの原因である」
+
+とはまだ確定していない。
+
+今回の観測では、
+Boundary付近でAccess Resultが変化しても、
+History Stateの変化やHistory Expansionは
+確認されていない。
+
+したがって現在の位置づけは、
+
+Access Boundary
+    ↓
+観測された
+
+History Expansion
+    ↓
+Boundary越えとの因果関係は未確定
+
+である。
+
+
+============================================================
+11. Boundary章のEvidenceの読み方
+============================================================
+
+これから個別Evidenceを見るときは、
+毎回次の順番で確認する。
+
+1. 実験目的
+
+何を疑問にしたのか。
+
+2. 実験条件
+
+Symbol、Timeframe、TargetTime、
+Request条件、RequestedBarsなど、
+何を固定・変更したのか。
+
+3. Access Result
+
+Requestは成功したか。
+何が返ったか。
+
+4. Returned Range / Series
+
+Returned First、Last、Bars、
+Range、Seriesなどに何が起きたか。
+
+5. History State
+
+SERIES_FIRSTDATE、
+SERIES_BARS_COUNT、
+SERIES_SYNCHRONIZEDに
+変化があったか。
+
+6. 比較
+
+前後・条件間で何が違ったか。
+
+7. 再現性
+
+同じ傾向が再実験で観測されたか。
+
+8. 現在の位置づけ
+
+Observation Candidateなのか、
+未確定なのか、
+次の研究へ渡すのか。
+
+
+============================================================
+12. 現在のBoundary章の位置づけ
+============================================================
+
+Boundary章は、
+「History Expansionの原因を解明した章」
+ではない。
+
+現在の位置づけは、
+
+「History Boundary付近における
+Access Result、Returned Data、
+History Stateの関係を観測した章」
+
+である。
+
+現在までに、
+
+・Access成功／失敗の境界
+・Boundary付近のReturned Result
+・Returned Series
+・Boundary Transition
+・History Stateの変化の有無
+
+を分けて観測してきた。
+
+この結果をもとに、
+次のB・C・Dへ研究を接続する。
+
+
+============================================================
+13. B / C / Dへの接続
+============================================================
+
+Boundary
+  ↓
+「境界付近で何が起きるのか？」
+
+B
+  ↓
+「返ってきた範囲はどう形成されるのか？」
+
+C
+  ↓
+「History Stateが変化する条件は何か？」
+
+D
+  ↓
+「Target側の条件は何に影響するのか？」
+
+この4領域は、
+同じ現象を同じ角度から見るものではない。
+
+それぞれ異なる観測軸を持つ。
+
+Boundaryで見えたAccess Resultの変化を、
+そのままHistory Expansionの説明に使わない。
+
+そのために、
+Boundary → B → C → D
+と研究領域を分離している。
+
+
+============================================================
+14. 現時点で言えること
+============================================================
+
+今回のBoundary研究から、
+
+・Boundary付近でRequest成功／失敗が変化する
+・Returned Rangeは独立した観測対象として扱える
+・Returned Seriesは別途比較できる
+・Boundary付近のRequest条件だけではHistory Expansionを確認できない
+・History StateはAccess Resultとは別に観測する必要がある
+
+という整理ができている。
+
+一方、
+
+・Boundary付近のRequest条件がHistory Expansionを起こす条件
+・Access SuccessからHistory Expansionへ至る条件
+・Boundary付近のRequest条件がHistory Expansionの原因なのか
+
+については、まだ確定していない。
+
+
+============================================================
+15. Evidenceの階層
+============================================================
+
+この文書はBoundary章の詳細Evidenceそのものではない。
+
+これは、
+
+「Boundary Evidenceをどう読むのか」
+
+を整理する入口である。
+
+その下に個別Evidenceを置く。
+
+Boundary
+├── 01_History_Boundary_Movement
+├── 02_Boundary_Returned_Detail
+├── 03_Boundary_Returned_Series
+├── 04_Boundary_Transition_Series
+├── Boundary_Chapter_Summary
+└── Boundary_Roadmap
+
+各Evidenceでは、
+この文書で示した共通フォーマットに沿って、
+
+実験条件
+↓
+観測結果
+↓
+比較
+↓
+再現性
+↓
+現在の位置づけ
+
+を確認する。
+
+
+============================================================
+16. まとめ
+============================================================
+
+Boundary研究で最初に見るべきなのは、
+
+「History Expansionが起きたか？」
+
+ではない。
+
+まず、
+
+「Boundary付近でRequestすると、
+Access Resultはどう変化するのか？」
+
+を見る。
+
+そして、
+
+「返ってきたデータはどうだったのか？」
+
+を見る。
+
+その後に、
+
+「History Stateは変化したのか？」
+
+を見る。
+
+この順番を守ることで、
+
+Access Result
+Returned Range
+History State
+History Expansion
+
+を同じものとして扱わずに済む。
+
+Boundary章は、
+RPBのEvidence研究へ入る最初の実験領域である。
+
+
+============================================================
+Document Status
+============================================================
+
+Document:
+RPB Boundary Chapter
+Evidence・再現性 詳細入口
+
+Version:
+v0.2
+
+Role:
+Boundary Detailed Evidence Entry
+
+Purpose:
+Boundary章の個別Evidenceへ進む前に、
+観測対象、研究の問い、Evidenceの読み方を整理する。
+
+Status:
+Draft / Detailed Entry
