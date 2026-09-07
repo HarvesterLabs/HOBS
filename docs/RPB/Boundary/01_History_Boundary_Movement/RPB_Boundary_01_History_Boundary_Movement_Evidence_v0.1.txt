@@ -1,6 +1,6 @@
 RPB Boundary Evidence
 01_History_Boundary_Movement
-Version: v0.1
+Version: v0.2
 
 ==================================================
 1. 目的
@@ -20,8 +20,8 @@ Version: v0.1
 Boundaryが絶対に動かないことを証明するものではない。
 
 今回の実験条件において、
-観測されたBoundary位置とReturned Result、
-History Stateにどのような変化が現れたかを記録する。
+SERIES_FIRSTDATEを基準として設定したBoundary付近と、
+Returned Result、History Stateにどのような変化が現れたかを記録する。
 
 
 ==================================================
@@ -91,7 +91,7 @@ Boundary付近の時間位置を設定する。
 
 1. 固定したRequestStartからTargetTimeをRequestする
 2. 同じ条件を複数回繰り返す
-3. Boundary付近について、複数の時間オフセットからProbeする
+3. SERIES_FIRSTDATEを基準に、複数の時間オフセットを設定してBoundary付近をProbeする
 4. Returned Resultを記録する
 5. SERIES_FIRSTDATE等のHistory Stateを前後で比較する
 
@@ -143,6 +143,9 @@ History Stateに関係する観測値を比較した。
 
 であった。
 
+HistoryGrowthEventsが0であることから、今回の観測条件では
+History Stateの成長は確認されなかった。
+
 したがって、
 今回の実験では固定Target Requestを繰り返しても、
 観測対象として設定したBoundary位置の変化や
@@ -165,20 +168,19 @@ Boundary付近について、
 
 の各オフセットを用いてProbeを行った。
 
-Boundaryの前後に相当するRequestでは、
-過去側のRequestが取得不成立となり、
-Error 4401が観測されたケースがあった。
+今回のBoundary Probeでは、Boundary付近の一部の過去側Requestで取得不成立となり、
+Error 4401が観測された。
 
 一方で、
 観測されたFirstDate自体には変化が確認されなかった。
 
 このことから今回の条件では、
 
-「Boundary付近でRequestのAccess Resultが変化する」
+「Boundary付近のRequest条件によってAccess Resultが変化する」
 
 ことは観測されたが、
 
-「その変化によってBoundary位置が移動する」
+「そのAccess Resultの変化に伴ってBoundary位置が移動する」
 
 ことは確認されなかった。
 
@@ -190,8 +192,7 @@ Error 4401が観測されたケースがあった。
 今回の観測で重要なのは、
 Requestの成功・失敗とHistory Stateを分離して考えることである。
 
-Requestが成功することは、
-データが返却されたことを示す。
+今回の観測では、Request Successに対してReturned Resultが得られた。
 
 しかし、
 
@@ -308,6 +309,9 @@ Target-side Dependencyを別の観測軸として扱う。
 
 ことは観測された。
 
+また、HistoryGrowthEventsは0であり、
+今回の観測条件ではHistory Stateの成長も確認されなかった。
+
 したがって現時点では、
 
 Access Result
@@ -317,6 +321,9 @@ History State
 History Expansion
 
 として扱う。
+
+ここでの「≠」は数学的な関係を示すものではなく、
+RPBにおいてそれぞれを別の観測対象として扱うことを意味する。
 
 本結果はObservation Candidateとして保存し、
 History Expansionの発生条件については
