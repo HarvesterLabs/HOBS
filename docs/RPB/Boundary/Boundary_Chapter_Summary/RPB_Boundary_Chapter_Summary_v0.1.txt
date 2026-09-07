@@ -1,0 +1,747 @@
+RPB Boundary Chapter
+Chapter Summary
+Evidence・総括 v0.1
+
+============================================================
+1. この総括の役割
+============================================================
+
+本資料は、RPB Boundary Chapterに属する
+01〜04のEvidenceを横断して整理するChapter Summaryである。
+
+Boundary Chapterでは、
+
+Access Result
+Returned Range
+Returned Series
+History State
+History Expansion
+
+を同一視せず、それぞれを別の観測対象として扱う。
+
+本総括の目的は、
+Boundaryそのものの内部仕様を説明することではない。
+
+01〜04で何が観測され、
+何が観測されず、
+どこまでをObservation Candidateとして固定でき、
+どこから先が未解決なのかを整理することである。
+
+
+============================================================
+2. Boundary Chapterの中心となる問い
+============================================================
+
+Boundary Chapterの中心的な問いは、
+
+「SERIES_FIRSTDATEを基準として観測したBoundary付近で、
+RequestするとAccess Result、Returned Data、
+Returned Series、History Stateは
+どのように振る舞うのか？」
+
+である。
+
+この問いを一つの結果へまとめず、
+
+01. History Boundary Movement
+02. Boundary Returned Detail
+03. Boundary Returned Series
+04. Boundary Transition Series
+
+の4つの観測ラインへ分離した。
+
+
+============================================================
+3. Chapter全体の観測構造
+============================================================
+
+Boundary Chapterでは、概念的に次の流れを観測する。
+
+Request条件
+    ↓
+Access Result
+    ↓
+Returned Detail
+    ↓
+Returned Series
+    ↓
+History State
+
+ただし、この矢印は内部処理の因果関係を意味しない。
+
+RPBでは、それぞれの層を独立した観測対象として扱う。
+
+特に重要なのは、
+
+Access Result
+    ≠
+Returned Range
+    ≠
+Returned Series
+    ≠
+History State
+    ≠
+History Expansion
+
+という整理である。
+
+ここでの「≠」は数学的な関係を示すものではなく、
+研究上、それぞれを別の観測対象として扱うことを意味する。
+
+
+============================================================
+4. 01 History Boundary Movement
+============================================================
+
+問い：
+
+「SERIES_FIRSTDATEを基準として観測しているBoundary付近に、
+実験中の変化が生じるのか？」
+
+実験条件：
+
+Symbol:
+BTCUSDT
+
+Timeframe:
+M1
+
+TargetTime:
+2026.07.01 00:00:00
+
+RequestedTargetBars:
+210
+
+Fixed RequestStart:
+SERIES_FIRSTDATE - 600秒
+
+Fixed Target:
+120 attempts
+
+Boundary Probe:
+1秒 / 60秒 / 600秒 / 3600秒 /
+86400秒 / 604800秒 / 2592000秒
+
+観測結果：
+
+- 固定Target Requestは120回すべてSuccess
+- 固定TargetのReturned Rangeに変化なし
+- HistoryBoundaryChangedEvents = 0
+- HistoryGrowthEvents = 0
+- Boundary付近の一部過去側RequestではError 4401
+- FirstDateの変化は確認されなかった
+
+整理：
+
+Boundary付近でAccess Resultの違いは観測された。
+
+しかし、その違いに伴う
+Boundary位置の変化やHistory Growthは
+今回の条件では確認されなかった。
+
+Observation Candidate：
+
+「観測されたBoundary位置に変化は確認されなかった。」
+
+ただし、
+
+「Boundaryは絶対に動かない」
+「History Expansionは発生しない」
+
+とは結論しない。
+
+
+============================================================
+5. 02 Boundary Returned Detail
+============================================================
+
+問い：
+
+「Boundary付近でRequestしたとき、
+実際にどのようなReturned Resultが返ってくるのか？」
+
+主な観測項目：
+
+- ReturnedFirst
+- ReturnedLast
+- ReturnedBars
+- Returned Range
+- TargetIncluded
+- Request Success / Failure
+- Error Code
+- RequestStart
+
+代表的なBoundary観測：
+
+-1秒:
+Failure / Error 4401
+
+0秒:
+Success
+
++1秒:
+Success
+
+代表的な0秒 / +1秒観測では、
+Returned Rangeは同じだった。
+
+また、関連するB章Evidenceでは、
+
+RequestStart位置の変化に伴い、
+
+0〜59秒:
+ReturnedBars = 1
+
+60〜119秒:
+ReturnedBars = 2
+
+120秒:
+ReturnedBars = 3
+
+という段階的なReturnedBars変化が観測されている。
+
+さらに、Boundary直近では
+RequestedBarsを増やしてもReturnedBarsが
+1本に制約された観測が存在する。
+
+このため、
+
+RequestedBars
+    ≠
+ReturnedBars
+
+となる観測がある。
+
+重要な整理：
+
+「何を要求したか」と
+「何が返ったか」は別である。
+
+さらに、
+
+「何が返ったか」と
+「History Stateが変化したか」も別である。
+
+Observation Candidate：
+
+ReturnedFirst / ReturnedLast / ReturnedBars /
+Returned Range / TargetIncludedを
+独立したReturned Detailとして記録する必要がある。
+
+
+============================================================
+6. 03 Boundary Returned Series
+============================================================
+
+問い：
+
+「Boundary前後で、Returned Seriesそのものに違いがあるのか？」
+
+実験条件：
+
+Timeframe:
+M1
+
+RequestedBars:
+10
+
+Attempts:
+各位置120回
+
+Boundary:
+SERIES_FIRSTDATE
+
+Positions:
+-1秒 / 0秒 / +1秒
+
+Returned Seriesは、
+ReturnedFirst / ReturnedLastだけではなく、
+実際のrates[].timeを順序付きtimestamp列として比較した。
+
+比較条件：
+
+- Copied数が一致
+- 全indexのbar timestampが一致
+
+両方を満たした場合：
+
+SameSeries = TRUE
+
+観測結果：
+
+-1秒:
+Failure / Error 4401
+
+0秒:
+Success
+
++1秒:
+Success
+
+成功した0秒および+1秒について、
+
+SameSeriesCount = 240
+SeriesChanged = 0
+
+が観測された。
+
+ここで240は、
+0秒と+1秒を120回ずつ直接ペア比較した
+240回の独立比較ではない。
+
+最初の成功Returned SeriesをReferenceとして保存し、
+その後の成功SeriesをReferenceと比較する方式である。
+
+したがって、
+
+「成功Returned Series 240観測が
+Reference Seriesと一致した」
+
+という意味である。
+
+Observation Candidate：
+
+今回の条件では、
+成功した0秒および+1秒のReturned Seriesについて
+Referenceとの不一致は観測されなかった。
+
+これはHistory ExpansionやRecoveryを意味しない。
+
+
+============================================================
+7. 04 Boundary Transition Series
+============================================================
+
+問い：
+
+「Boundary直前・Boundary・Boundary直後へ
+Request位置を順に変化させたとき、
+Request ResultおよびReturned Seriesは
+どのように変化するのか？」
+
+実験条件：
+
+Timeframe:
+M1
+
+RequestedBars:
+10
+
+Attempts:
+各位置120回
+
+合計：
+360 observations
+
+Positions:
+-1秒 / 0秒 / +1秒
+
+04では、Transitionの主比較を
+
+BOUNDARY_AT → BOUNDARY_PLUS1
+
+としている。
+
+BOUNDARY_MINUS1は、
+Boundary到達前の状態を確認する
+pre-boundary controlである。
+
+観測されたAccess Result：
+
+Boundary -1秒:
+Failure / 4401
+
+Boundary 0秒:
+Success
+
+Boundary +1秒:
+Success
+
+したがってAccess Resultは、
+
+Failure
+    ↓
+Success
+    ↓
+Success
+
+と観測された。
+
+一方、成功したReturned Seriesでは、
+Referenceとの不一致は観測されなかった。
+
+SameSeriesCount:
+240
+
+SeriesChanged:
+0
+
+重要な整理：
+
+「Access Resultが変化した」
+
+ことと、
+
+「Returned Seriesが変化した」
+
+ことは同一ではない。
+
+また、04のTransitionは
+位置を順序付きで比較する観測軸であり、
+Seriesの同一性判定そのものは
+Reference Seriesとの比較によって行われる。
+
+
+============================================================
+8. 01〜04を横断した共通観測
+============================================================
+
+4つのEvidenceを横断すると、
+次の観測が整理できる。
+
+【A. Access Result】
+
+Boundary付近では、
+Request Success / Failureが変化する観測がある。
+
+代表条件では、
+
+-1秒 = Failure / 4401
+0秒 = Success
++1秒 = Success
+
+であった。
+
+ただし、条件差によって結果が異なる観測も存在するため、
+「0秒なら必ずSuccess」と一般化しない。
+
+
+【B. Returned Detail】
+
+Requestした本数と、
+実際に返った本数は一致しない場合がある。
+
+RequestedBars
+    ≠
+ReturnedBars
+
+ReturnedFirst / Last / Bars / Range / TargetIncludedを
+個別に観測する必要がある。
+
+
+【C. Returned Series】
+
+成功した0秒 / +1秒のReturned Seriesについて、
+今回の条件ではReferenceとの不一致は観測されなかった。
+
+つまり、
+
+Access Resultの変化
+    ≠
+Returned Seriesの変化
+
+として扱う必要がある。
+
+
+【D. History State】
+
+01〜04の今回の観測条件では、
+
+- History Growth
+- FirstDateChanged
+- SyncChanged
+- Boundary Movement
+
+は確認されなかった。
+
+ただし、
+
+「History Stateが変化しなかった」
+ことから
+「内部で履歴処理が一切行われなかった」
+
+とは確定しない。
+
+
+============================================================
+9. Boundary Chapterで固定できるObservation Candidate
+============================================================
+
+現時点でChapter全体として固定できるCandidateは、
+次のように整理する。
+
+Candidate 1:
+
+SERIES_FIRSTDATEを基準としたBoundary付近では、
+Request Success / Failureが変化する観測がある。
+
+Candidate 2:
+
+Request Success / Failureの変化だけでは、
+History Stateの変化を意味しない。
+
+Candidate 3:
+
+RequestedBarsとReturnedBarsは
+一致しない場合がある。
+
+Candidate 4:
+
+ReturnedFirst / ReturnedLast / ReturnedBars /
+Returned Range / TargetIncludedは、
+Returned Detailとして分離して観測できる。
+
+Candidate 5:
+
+Returned RangeとReturned Seriesは、
+別の観測対象として扱う必要がある。
+
+Candidate 6:
+
+今回の条件では、成功した0秒 / +1秒の
+Returned Seriesについて不一致は観測されなかった。
+
+Candidate 7:
+
+今回のBoundary観測条件では、
+History Boundary MovementおよびHistory Growthは
+確認されなかった。
+
+Candidate 8:
+
+Boundary付近のAccess Result変化、
+Returned Dataの変化、
+History Stateの変化を、
+一つの現象としてまとめてはいけない。
+
+
+============================================================
+10. Boundary Chapterでまだ分かっていないこと
+============================================================
+
+Boundary ChapterのEvidenceだけでは、
+以下は確定できない。
+
+- MT5内部でBoundaryがどのように管理されているか
+- Error 4401の内部的な発生理由
+- Access Resultを決定する内部機構
+- Returned Rangeが内部でどのように形成されるか
+- Returned Seriesが形成される内部条件
+- Access SuccessがHistory Expansionを発生させる条件
+- Returned Rangeの拡大条件
+- TargetIncludedが変化する内部条件
+- Boundary位置が別条件で変化する可能性
+- History ExpansionとBoundaryの内部的関係
+- Failure → SuccessとSeries同一性の因果関係
+
+
+============================================================
+11. Boundary Chapterで避けるべき飛躍
+============================================================
+
+今回のEvidenceから、次のような結論へ飛躍しない。
+
+「Boundaryを跨いだからHistory Expansionが起きた」
+
+「RequestがSuccessしたからHistoryが拡張した」
+
+「Returned Rangeが変化したからHistory Stateも変化した」
+
+「Returned Seriesが同じだから内部状態も同じである」
+
+「-1秒がFailure、0秒がSuccessなので、
+0秒がMT5の絶対的Boundaryである」
+
+「今回Boundaryが動かなかったので、
+Boundaryは絶対に動かない」
+
+いずれも、現在のEvidenceだけでは確定できない。
+
+
+============================================================
+12. 01〜04の役割分担
+============================================================
+
+01:
+Boundary位置そのものに変化が生じるか。
+
+02:
+Boundary付近で何が返るか。
+
+03:
+返ったtimestamp系列そのものが同じか。
+
+04:
+Request位置を変化させたとき、
+Access Result / Returned Seriesがどう遷移するか。
+
+この4つは重複ではなく、
+Boundaryという現象を異なる観測軸から分解したものである。
+
+
+============================================================
+13. Boundary Chapterの総合結論
+============================================================
+
+Boundary Chapterでは、
+SERIES_FIRSTDATEを基準としたBoundary付近において、
+
+「Request条件」
+「Access Result」
+「Returned Detail」
+「Returned Series」
+「History State」
+
+を分離して観測した。
+
+その結果、今回の条件では、
+
+1. Boundary付近でAccess Resultの変化が観測された。
+
+2. 代表条件では、
+   -1秒 = Failure / 4401
+   0秒 = Success
+   +1秒 = Success
+   という並びが観測された。
+
+3. RequestedBarsとReturnedBarsは
+   一致しない場合がある。
+
+4. Returned RangeとReturned Seriesは
+   別の観測対象として扱える。
+
+5. 成功した0秒 / +1秒のReturned Seriesについて、
+   Referenceとの不一致は観測されなかった。
+
+6. Boundary MovementおよびHistory Growthは、
+   今回の条件では確認されなかった。
+
+したがってBoundary Chapterの現時点での最重要整理は、
+
+Access Result
+    ≠
+Returned Detail
+    ≠
+Returned Series
+    ≠
+History State
+    ≠
+History Expansion
+
+である。
+
+Boundary Chapterは、
+「Boundaryの正体を解明した章」ではない。
+
+むしろ、
+
+「Boundary付近で起きている現象を、
+Access側・Returned Data側・Series側・History側へ
+分離して観測できる状態にした章」
+
+として位置づける。
+
+この分離が、次の研究軸で
+History Expansion ConditionやTarget-side Dependencyを
+検証するときの基礎となる。
+
+
+============================================================
+14. 次の研究軸への接続
+============================================================
+
+Boundary Chapterで確定できたのは、
+「Boundary付近で何が観測できるか」の整理である。
+
+一方、
+
+「何を変えればHistory Stateが変化するのか？」
+
+という問いは、Boundary Chapterだけでは解決しない。
+
+この問いはC Chapter、
+
+C. History Expansion Condition
+
+へ接続する。
+
+また、
+
+「TargetTimeの位置やTarget-side条件が
+History StateやReturned Resultへ影響するのか？」
+
+という問いはD Chapter、
+
+D. Target-side Dependency
+
+へ接続する。
+
+したがって、Boundary Chapter終了後は、
+
+Boundary
+    ↓
+C. History Expansion Condition
+
+を次の主要研究軸候補として扱い、
+必要に応じてDとの境界を確認しながら進める。
+
+
+============================================================
+15. Evidenceの扱い
+============================================================
+
+Boundary Chapterの各Evidenceは、
+それぞれ異なる実験条件を持つ。
+
+したがって、01〜04の結果を
+無条件に一つの実験結果として統合しない。
+
+Chapter Summaryは、
+各Evidenceに共通する観測上の構造を整理するための資料であり、
+各Evidenceの条件差を消すものではない。
+
+過去観測と現在観測が一致しない場合も、
+直ちにどちらかを否定せず、
+
+実験条件
+    ↓
+Access Result
+    ↓
+Returned Detail
+    ↓
+Returned Series
+    ↓
+History State
+
+の対応関係を保持する。
+
+
+============================================================
+Document Status
+============================================================
+
+Document:
+RPB Boundary Chapter Summary
+
+Version:
+v0.1
+
+Status:
+Draft / Chapter Summary
+
+Scope:
+Boundary Chapter 01〜04
+
+Primary Axis:
+SERIES_FIRSTDATEを基準としたBoundary付近の観測
+
+Main Separation:
+Access Result / Returned Detail / Returned Series / History State
+
+History Expansion:
+未確定
+
+Next Axis Candidate:
+C. History Expansion Condition
+
+============================================================
