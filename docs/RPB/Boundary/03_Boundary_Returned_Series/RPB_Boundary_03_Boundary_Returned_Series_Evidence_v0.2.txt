@@ -1,0 +1,591 @@
+RPB Boundary Chapter
+03_Boundary_Returned_Series
+Evidence・再現性記録 v0.2
+
+============================================================
+1. このEvidenceの役割
+============================================================
+
+本Evidenceは、RPB Boundary Chapterにおける
+「03. Boundary Returned Series」を記録するものである。
+
+Boundary Chapterでは、
+Access Result
+Returned Range
+Returned Series
+History State
+を同一視せず、それぞれ別の観測対象として扱う。
+
+03では特に、
+「Boundary前後で、Returned Seriesそのものに違いがあるのか？」
+を観測する。
+
+02 Boundary Returned Detailが
+ReturnedFirst / ReturnedLast / ReturnedBars / Returned Range
+を中心に扱うのに対し、
+
+03では、実際に返されたbarの時刻列
+(rates[].time)
+を系列として記録・比較する。
+
+このEvidenceは観測事実を記録するものであり、
+History Expansion、Recovery、原因、内部仕様を確定するものではない。
+
+
+============================================================
+2. 観測の問い
+============================================================
+
+本Evidenceの問いは次の通り。
+
+「SERIES_FIRSTDATEを基準として、
+その直前・境界・直後からRequestした場合、
+実際に返されるbar時刻の系列は同じなのか、
+それとも変化するのか？」
+
+比較対象は、
+
+・Boundary -1秒
+・Boundary 0秒
+・Boundary +1秒
+
+である。
+
+
+============================================================
+3. 実験条件
+============================================================
+
+実験コード：
+HOBS_RPB_BoundaryReturnedSeries_Test.mq5
+
+Timeframe：
+M1
+
+RequestedBars：
+10
+
+Attempts：
+各位置 120回
+
+Wait：
+2秒
+
+TargetTime：
+2026.07.01 00:00:00
+
+Boundary：
+SERIES_FIRSTDATE
+
+RequestStart：
+Boundaryを基準に、
+
+-1秒
+  ↓
+ 0秒
+  ↓
++1秒
+
+の3位置を使用する。
+
+
+============================================================
+4. 独立変数
+============================================================
+
+独立変数は、
+
+「requestStart位置とSERIES_FIRSTDATEの相対位置」
+
+である。
+
+使用した位置：
+
+・-1秒：Boundary直前
+・ 0秒：Boundary位置
+・+1秒：Boundary直後
+
+この研究では、
+「Boundaryを越えたことが原因で変化した」
+とは扱わない。
+
+あくまで、
+RequestStart位置の違いに伴って
+Returned Seriesがどう観測されるかを比較する。
+
+
+============================================================
+5. 観測対象
+============================================================
+
+主な観測対象：
+
+【Access Result】
+
+・Request Success / Failure
+・ReturnedFirst
+・ReturnedLast
+・ReturnedBars
+・TargetIncluded
+
+【Returned Series】
+
+・実際に返されたbarの時刻列
+・各barのindex
+・SERIES_FIRSTDATEからの距離
+・系列の同一性
+
+【History State】
+
+・SERIES_FIRSTDATE
+・SERIES_BARS_COUNT
+・SERIES_SYNCHRONIZED
+・History Stateの変化
+
+重要なのは、
+
+Returned Seriesの変化
+≠
+History Stateの変化
+≠
+History Expansion
+
+として扱うことである。
+
+
+============================================================
+6. Returned Seriesの比較方法
+============================================================
+
+最初に成功したReturned Seriesを
+Reference Seriesとして保存する。
+
+その後の成功したReturned Seriesについて、
+
+・Copied数
+・各indexにおけるbar timestamp
+
+を比較する。
+
+Copied数が一致し、
+かつ全indexのtimestampが一致した場合、
+
+SameSeries = TRUE
+
+とする。
+
+それ以外は、
+
+SeriesChanged = TRUE
+
+として記録する。
+
+この比較は、
+「返された時系列が同一かどうか」
+を記述するためのものである。
+
+SeriesChangedは、それ自体では
+RecoveryやHistory Expansionを意味しない。
+
+
+============================================================
+7. 実験コード上の観測設計
+============================================================
+
+実験コードでは、Returned Seriesの各barについて
+timestampを直接記録する。
+
+また、各timestampについて
+SERIES_FIRSTDATEからの秒距離を記録する。
+
+これにより、
+
+・どのbarが返ったのか
+・何本返ったのか
+・Boundaryからどの位置にあるbarなのか
+・別のRequestで同じ時刻列が返ったのか
+
+を比較できる。
+
+History Stateについては、
+Request前後のBars、
+SERIES_FIRSTDATE、
+SERIES_SYNCHRONIZEDを別途取得する。
+
+したがって、
+Returned SeriesとHistory Stateを
+同じ観測値として扱わない設計になっている。
+
+
+============================================================
+8. 観測結果
+============================================================
+
+Boundary位置ごとの代表的な結果は次の通り。
+
+【Boundary -1秒】
+
+Request：
+Failure
+
+Error：
+4401
+
+Returned Series：
+取得されなかった。
+
+
+【Boundary 0秒】
+
+Request：
+Success
+
+Returned Series：
+取得成功
+
+
+【Boundary +1秒】
+
+Request：
+Success
+
+Returned Series：
+取得成功
+
+
+【03の主要観測結果】
+
+成功した0秒と+1秒のReturned Seriesについて、
+
+・Copied数が一致
+・全bar timestampが一致
+・SameSeriesCount = 240
+・SeriesChanged = 0
+
+が観測された。
+
+したがって、今回の観測条件では、
+Boundary 0秒とBoundary +1秒で
+成功したReturned Seriesは同一系列として観測された。
+
+
+============================================================
+9. 代表的なReturned Seriesの観測
+============================================================
+
+Returned Seriesは、
+単にReturnedFirstとReturnedLastだけを見るのではなく、
+
+index 0
+index 1
+index 2
+...
+index n
+
+という順序付きのtimestamp列として比較した。
+
+実験コードでは、
+
+SeriesTimes
+
+として各barのindexと、
+SERIES_FIRSTDATEからの秒距離を記録する。
+
+このため、
+「FirstとLastが同じだから同じSeries」
+という判定ではなく、
+
+「Copied数と全timestampが一致した」
+
+ことをSameSeriesの条件としている。
+
+
+============================================================
+10. 反復観測
+============================================================
+
+各Boundary位置について120回の反復観測を行った。
+
+本Evidenceにおける「反復観測」は、同一実験条件内での繰り返し観測を意味する。
+異なる実験環境・実験実行による独立再現性を示すものではない。
+
+Boundary -1秒：
+Request Failure（4401）
+
+Boundary 0秒：
+Request Success
+
+Boundary +1秒：
+Request Success
+
+成功した0秒および+1秒については、
+Reference Seriesとの比較対象として合計240件が記録され、
+
+SameSeriesCount = 240
+SeriesChanged = 0
+
+であった。
+
+ここでの240件は、同一実験条件内で取得された成功Returned Seriesの比較件数であり、
+独立した240回の再現実験を意味しない。
+
+今回の実験条件では、
+成功したReturned Seriesについて
+系列の変化は観測されなかった。
+
+ただし、これは同一実験条件内の反復観測結果であり、
+異なる環境・実行条件における独立再現性を示すものではない。
+
+
+============================================================
+11. History Stateとの比較
+============================================================
+
+本Evidenceでは、Returned Seriesだけでなく、
+History Stateも独立して観測している。
+
+観測項目：
+
+・HistoryGrowth
+・FirstDateChanged
+・SyncChanged
+
+Boundary Returned Seriesの結果を
+History Expansionの発生と同一視しない。
+
+今回確認されたのは、
+
+「どのRequestでどのReturned Seriesが返ったか」
+
+というAccess / Returned Data側の観測である。
+
+Returned Seriesが同一だったことだけから、
+MT5内部で何が起きているかを確定することはできない。
+
+
+============================================================
+12. 現時点で言えること
+============================================================
+
+今回の観測条件では、
+
+1. Boundary -1秒ではRequest Failure（4401）が観測された。
+
+2. Boundary 0秒ではRequestが成功した。
+
+3. Boundary +1秒でもRequestが成功した。
+
+4. 成功した0秒と+1秒のReturned Seriesは
+   同一系列として観測された。
+
+5. SameSeriesCountは240 / 240であった。
+
+6. SeriesChangedは0であった。
+
+7. Returned Seriesの比較は、
+   Copied数と全bar timestampの一致によって行った。
+
+8. Returned Seriesは、
+   Returned Rangeとは別の観測対象として扱える。
+
+9. Returned Seriesの同一性・変化だけから、
+   History ExpansionやRecoveryを確定することはできない。
+
+
+============================================================
+13. 現時点で言えないこと
+============================================================
+
+今回のEvidenceだけから、
+
+・なぜ-1秒ではFailureになるのか
+・なぜ0秒からSuccessになるのか
+・なぜ0秒と+1秒で同一Seriesになるのか
+・Boundaryが内部的に何を意味するのか
+・Access SuccessがHistory Expansionを発生させるのか
+・Returned Seriesの同一性がHistory Expansionと関係するのか
+・MT5内部でどのような履歴処理が行われているのか
+
+は確定できない。
+
+また、
+
+「Boundaryを跨いだからSeriesが同一になった」
+
+という因果関係も、このEvidenceだけでは確定しない。
+
+
+============================================================
+14. 02 Boundary Returned Detailとの関係
+============================================================
+
+02では、
+
+・ReturnedFirst
+・ReturnedLast
+・ReturnedBars
+・Returned Range
+
+を中心に観測した。
+
+03では、
+
+・実際のbar timestamp列
+・系列順序
+・系列の同一性
+
+を観測した。
+
+したがって、
+
+02
+「どの範囲が返ったのか」
+
+03
+「返った時系列そのものは同じなのか」
+
+という役割分担になる。
+
+この分離によって、
+
+Returned Range
+と
+Returned Series
+
+を同じ観測値として扱わずに済む。
+
+
+============================================================
+15. 04 Boundary Transition Seriesへの接続
+============================================================
+
+03で、
+
+「Boundary 0秒と+1秒の成功Returned Seriesは
+同一系列として観測された」
+
+ことを確認した。
+
+次の04では、
+Boundary前 → Boundary → Boundary後
+という遷移の中で、
+
+・Request Success / Failure
+・Returned Series
+・Series同一性
+
+がどのように変化するのかを、
+Transitionとして観測する。
+
+03が
+「Seriesそのものの同一性」
+を問うのに対し、
+
+04は
+「Boundary付近でのSeriesの遷移」
+を問う。
+
+両者は関連するが、同じEvidenceではない。
+
+
+============================================================
+16. Evidenceとしての位置づけ
+============================================================
+
+本Evidenceは、
+
+Experiment
+↓
+Evidence
+↓
+Observation
+↓
+Comparison
+↓
+Reproduction
+↓
+Candidate
+
+というRPBのEvidence研究の流れに位置する。
+
+今回固定できるのは、
+
+「今回の条件において、
+Boundary 0秒と+1秒で成功したReturned Seriesは
+同一系列として観測された」
+
+という観測事実である。
+
+これをHistory Expansionの原因や
+MT5内部仕様の説明へ直接拡張しない。
+
+
+============================================================
+17. 結論
+============================================================
+
+03 Boundary Returned Seriesでは、
+
+SERIES_FIRSTDATEを基準とした
+-1秒 / 0秒 / +1秒のRequest位置を用いて、
+Returned Seriesの実際のtimestamp列を観測・比較した。
+
+今回の条件では、
+
+・-1秒：Request Failure（4401）
+・0秒：Request Success
+・+1秒：Request Success
+・0秒 / +1秒：同一Returned Series
+・SameSeriesCount = 240 / 240
+・SeriesChanged = 0
+
+が観測された。
+
+したがって、
+「Boundary付近でReturned Seriesがどのような時系列として返るのか」
+という観測軸について、
+今回の条件下でのSeries同一性をEvidenceとして固定する。
+
+ただし、この結果は
+History Expansionの原因・条件・内部機構を確定するものではない。
+
+
+============================================================
+Document Status
+============================================================
+
+Document:
+RPB Boundary 03_Boundary_Returned_Series
+
+Version:
+v0.2
+
+Role:
+Boundary Detailed Evidence
+
+Status:
+Reviewed / Evidence Record
+
+Research Axis:
+Boundary → Returned Series Structure
+
+Independent Variable:
+requestStart position relative to SERIES_FIRSTDATE
+
+Positions:
+-1s / 0s / +1s
+
+Primary Observation:
+Returned Series timestamp sequence
+
+Comparison Rule:
+Copied count + every returned bar timestamp
+
+Repetition:
+120 observations per position; same-condition repeated observation
+
+Recovery Classification:
+Not performed
+
+History Expansion:
+Not established
