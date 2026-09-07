@@ -1,5 +1,4 @@
-HOBS MT5版 VWAP v4 Lite
-検証・凍結ドキュメント v1.0
+HOBS MT5版 VWAP v4 Lite 検証・凍結ドキュメント v1.0
 
 文書日付：2026-09-07
 対象コンポーネント：HOBS MT5版 VWAP
@@ -19,7 +18,7 @@ HOBS MT5版 VWAP v4 Lite
 ・新バー遷移
 ・数値検証
 ・リアルタイム動作検証
-・耐久性検証
+・短時間リアルタイム安定性観測
 ・検証によって確認できたこと
 ・確認できていないこと
 ・凍結条件
@@ -62,14 +61,12 @@ MT5実装では、VとしてTick Volumeを使用する。
 
 新しいバーを計算対象へ追加する場合、累積状態を利用して更新する。
 
-VWAP_new
-= (PV_old + (TP_new × V_new))
-  / (V_old + V_new)
+VWAP_new = (PV_old + (TP_new × V_new)) / (V_old + V_new)
 
 ここで、
 
 PV_old = Σ(TP × V)
-V_old  = ΣV
+V_old = ΣV
 
 である。
 
@@ -94,9 +91,7 @@ VWAPの数学的定義そのものは、普遍的な固定時計時刻を必要�
 
 したがって、
 
-VWAPの本質
-≠
-00:00リセットという実装上の設定
+VWAPの本質 ≠ 00:00リセットという実装上の設定
 
 と明確に区別する。
 
@@ -179,22 +174,17 @@ InpPrintDebug = false
 
 診断ビルドでは、内部計算とは独立して、
 
-independent_cum_pv
-= old_cum_pv + tp_new × v_new
+independent_cum_pv = old_cum_pv + tp_new × v_new
 
-independent_cum_vol
-= old_cum_vol + v_new
+independent_cum_vol = old_cum_vol + v_new
 
-independent_vwap
-= independent_cum_pv / independent_cum_vol
+independent_vwap = independent_cum_pv / independent_cum_vol
 
 を計算し、V4 Lite内部状態と比較した。
 
 この構造により、
 
-「通常計算ロジック」
-と
-「検証用の独立計算」
+「通常計算ロジック」と「検証用の独立計算」
 
 を分離した。
 
@@ -246,41 +236,29 @@ PASS
 
 実際のバー遷移について、診断ビルドによる独立計算と内部計算を比較した。
 
-Old CumPV：
-7525262.0676666601
+Old CumPV：7525262.0676666601
 
-Old CumVol：
-48238
+Old CumVol：48238
 
-New TP：
-155.860000...
+New TP：155.860000…
 
-New Tick Volume：
-1
+New Tick Volume：1
 
-Internal CumPV：
-7525417.9276666604
+Internal CumPV：7525417.9276666604
 
-Internal CumVol：
-48239
+Internal CumVol：48239
 
-Independent CumPV：
-7525417.9276666604
+Independent CumPV：7525417.9276666604
 
-Independent CumVol：
-48239
+Independent CumVol：48239
 
-Independent VWAP：
-156.002776335883
+Independent VWAP：156.002776335883
 
-Internal VWAP：
-156.002776335883
+Internal VWAP：156.002776335883
 
-CumPV Diff：
-0.000000000000
+CumPV Diff：0.000000000000
 
-VWAP Diff：
-0.000000000000
+VWAP Diff：0.000000000000
 
 使用した判定閾値：
 
@@ -322,7 +300,7 @@ BTCUSDT_HOBS_TESTは、現在のMT5環境で作成されたカスタム／テス
 8-5. USDJPY_z リアルタイム試験
 ----------------------------------------------------------------------
 
-現在のMT5環境でリアルタイム更新が確認できるUSDJPY_z / M1を、リアルタイム耐久試験の対象とした。
+現在のMT5環境でリアルタイム更新が確認できるUSDJPY_z / M1を、リアルタイム安定性観測の対象とした。
 
 確認した内容：
 
@@ -333,17 +311,13 @@ BTCUSDT_HOBS_TESTは、現在のMT5環境で作成されたカスタム／テス
 
 メモリ観測値：
 
-開始時：
-67.9 MB
+開始時：67.9 MB
 
-約5分後：
-68.7 MB
+約5分後：68.7 MB
 
-約30分後：
-66.1 MB
+約30分後：66.1 MB
 
-30分時点のCPU：
-約0.3%
+30分時点のCPU：約0.3%
 
 約30分の観測では、メモリが一方向に継続増加する傾向は確認されなかった。
 
@@ -351,8 +325,7 @@ BTCUSDT_HOBS_TESTは、現在のMT5環境で作成されたカスタム／テス
 
 判定：
 
-PASS
-（観測した短時間耐久範囲において）
+PASS（観測した短時間リアルタイム安定性の範囲において）
 
 ただし、これは「あらゆる条件でメモリリークが存在しない」という証明ではない。
 
@@ -362,36 +335,27 @@ PASS
 
 主な試験環境：
 
-チャート：
-USDJPY_z / M1
+チャート：USDJPY_z / M1
 
-インジケーター：
-HOBS_MT5_VWAP_v4_Lite × 1
+インジケーター：HOBS_MT5_VWAP_v4_Lite × 1
 
-Debug：
-OFF
+Debug：OFF
 
-Max bars in chart：
-100,000
+Max bars in chart：100,000
 
 Market Watch：
-USDJPY_z
-BTCUSDT_HOBS_TEST
+・USDJPY_z
+・BTCUSDT_HOBS_TEST
 
-Toolbox：
-非表示
+Toolbox：非表示
 
-Algorithmic Trading：
-OFF
+Algorithmic Trading：OFF
 
-DLL：
-OFF
+DLL：OFF
 
-WebRequest：
-OFF
+WebRequest：OFF
 
-News：
-OFF
+News：OFF
 
 試験環境は、V4 Lite以外の不要な端末負荷をできるだけ抑えることを目的として軽量化した。
 
@@ -412,7 +376,7 @@ OpenCL/CUDAが利用可能な環境であることは確認したが、V4 Lite�
 5. 新バーへの状態遷移が正常に動作する。
 6. テストした新バー遷移において現在バーの二重計上が発生していない。
 7. 増分累積状態が独立計算と一致する。
-8. テスト環境でのCPU負荷が非常に低い。
+8. テスト環境において、V4 Lite稼働中の端末CPU使用率は約0.3%程度まで低下しており、高いCPU負荷は観測されなかった。
 9. 約30分のUSDJPYリアルタイム観測において、メモリの一方向的な継続増加は確認されなかった。
 
 ======================================================================
@@ -421,7 +385,7 @@ OpenCL/CUDAが利用可能な環境であることは確認したが、V4 Lite�
 
 以下については、今回のEvidenceだけでは「証明済み」としない。
 
-・1年分のBTC M1による耐久試験
+・1年分のBTC M1による長期履歴負荷試験
 ・リアルタイムBTCによる耐久試験
 ・あらゆるMT5実行条件における完全な安定性
 ・あらゆるブローカー／データフィード条件における完全な安定性
@@ -445,11 +409,7 @@ V4 Liteは今後、
 
 変更が必要になった場合は、
 
-変更理由
-→ 仕様化
-→ 実装
-→ 独立検証
-→ レビュー
+変更理由 → 仕様化 → 実装 → 独立検証 → レビュー
 
 の順で扱う。
 
@@ -459,7 +419,7 @@ V4 Liteで凍結する基準：
 ・HLC3計算
 ・Tick Volume入力
 ・実際に存在するバーを計算対象とすること
-・MT5サーバー／ブローカーのバー日付を基準としたカレンダー日計算窓
+・MT5サーバー／ブローカーのバー日付を基準としたカレンダー日計算窓（V4 Lite実装仕様）
 ・現在バーを計算対象に含めること
 ・累積状態を利用した増分計算
 ・新バー遷移
@@ -509,12 +469,7 @@ VWAPはHOBSの市場観測を構成する一つの観測単位である。
 
 将来的には、
 
-VWAP
-＋ Price
-＋ Volume
-＋ Time
-＋ Structure
-＋ Psychology
+VWAP ＋ Price ＋ Volume ＋ Time ＋ Structure ＋ Psychology
 ↓
 HOBS Market Observation
 
@@ -540,36 +495,25 @@ HOBS全体の方向性：
 15. 最終ステータス
 ======================================================================
 
-対象：
-HOBS_MT5_VWAP_v4_Lite.mq5
+対象：HOBS_MT5_VWAP_v4_Lite.mq5
 
-基本計算：
-VERIFIED
+基本計算：VERIFIED
 
-増分累積状態：
-VERIFIED
+増分累積状態：VERIFIED
 
-新バー遷移：
-VERIFIED
+新バー遷移：VERIFIED
 
-独立数値監査：
-PASS
+独立数値監査：PASS
 
-BTC過去M1読み込み：
-PASS
+BTC過去M1読み込み：PASS
 
-USDJPYリアルタイム動作：
-PASS
+USDJPYリアルタイム動作：PASS
 
-約30分リアルタイム安定性：
-PASS
-（異常なメモリ増加傾向なし）
+約30分リアルタイム安定性：PASS（異常なメモリ増加傾向なし）
 
-Production版：
-未完成
+Production版：未完成
 
-V4 Lite：
-VERIFIED BASELINE / FREEZE
+V4 Lite：VERIFIED BASELINE / FREEZE
 
 最終原則：
 
