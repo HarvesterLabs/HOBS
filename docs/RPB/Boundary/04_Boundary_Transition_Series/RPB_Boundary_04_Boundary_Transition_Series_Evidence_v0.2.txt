@@ -1,0 +1,729 @@
+RPB Boundary Chapter
+04_Boundary_Transition_Series
+Evidence・観測記録 v0.2
+
+============================================================
+1. このEvidenceの役割
+============================================================
+
+本Evidenceは、RPB Boundary Chapterにおける
+「04. Boundary Transition Series」を記録するものである。
+
+Boundary Chapterでは、
+Access Result
+Returned Range
+Returned Series
+History State
+を同一視せず、それぞれ別の観測対象として扱う。
+
+03 Boundary Returned Seriesでは、
+Boundary前後でReturned Seriesそのものが同一かどうかを
+timestamp列として比較した。
+
+04ではそこから一段進み、
+
+「Boundary前 → Boundary → Boundary後」
+
+という順序の中で、
+Access ResultとReturned Seriesがどのように遷移するのかを観測する。
+
+本Evidenceは観測事実を記録するものであり、
+History Expansion、Recovery、原因、内部仕様を確定するものではない。
+
+
+============================================================
+2. 観測の問い
+============================================================
+
+本Evidenceの問いは次の通り。
+
+「SERIES_FIRSTDATEを基準として、
+Boundary直前・Boundary・Boundary直後へ
+Request位置を順に変化させたとき、
+Request ResultおよびReturned Seriesは
+どのように変化するのか？」
+
+観測位置は、
+
+・Boundary -1秒
+・Boundary 0秒
+・Boundary +1秒
+
+である。
+
+03が「Seriesの同一性」を中心に扱うのに対し、
+04では「位置を変化させたときの遷移」を観測対象とする。
+
+
+============================================================
+3. 実験コードと条件
+============================================================
+
+実験コード：
+HOBS_RPB_BoundaryTransitionSeries_Test.mq5
+
+Timeframe：
+M1
+
+RequestedBars：
+10
+
+Attempts：
+各位置 120回
+
+Wait：
+2秒
+
+TargetTime：
+2026.07.01 00:00:00
+
+Boundary：
+SERIES_FIRSTDATE
+
+RequestStart：
+Boundaryを基準に、
+
+-1秒
+  ↓
+ 0秒
+  ↓
++1秒
+
+の3位置を使用する。
+
+合計観測数：
+120 × 3 = 360 observations
+
+
+============================================================
+4. 独立変数
+============================================================
+
+独立変数は、
+
+「requestStart位置とSERIES_FIRSTDATEの相対位置」
+
+である。
+
+使用した位置：
+
+・-1秒：Boundary直前
+・ 0秒：Boundary位置
+・+1秒：Boundary直後
+
+実験コードでは、
+Transitionの主比較を
+
+BOUNDARY_AT → BOUNDARY_PLUS1
+
+としている。
+
+BOUNDARY_MINUS1は、
+境界前の状態を確認するための
+pre-boundary controlとして扱う。
+
+したがって、
+単純に「-1秒 → 0秒 → +1秒の3点を
+一つの因果系列として扱う」設計ではない。
+
+
+============================================================
+5. 観測対象
+============================================================
+
+【Access Result】
+
+・Request Success / Failure
+・Error Code
+・ReturnedFirst
+・ReturnedLast
+・ReturnedBars
+・TargetIncluded
+
+【Returned Series】
+
+・実際に返されたbarのtimestamp列
+・各barのindex
+・SERIES_FIRSTDATEからの距離
+・Reference Seriesとの同一性
+・SeriesChanged
+
+【History State】
+
+・SERIES_FIRSTDATE
+・SERIES_BARS_COUNT
+・SERIES_SYNCHRONIZED
+・HistoryGrowth
+・FirstDateChanged
+・SyncChanged
+
+重要なのは、
+
+Access Resultの変化
+≠
+Returned Seriesの変化
+≠
+History Stateの変化
+≠
+History Expansion
+
+として扱うことである。
+
+
+============================================================
+6. Transitionの観測設計
+============================================================
+
+04では、各Request位置を独立した観測点として記録し、
+その結果を順序付きで比較する。
+
+観測順序：
+
+Boundary -1秒
+    ↓
+Boundary 0秒
+    ↓
+Boundary +1秒
+
+ただし、実験コード上の主要なTransition比較は、
+
+BOUNDARY_AT → BOUNDARY_PLUS1
+
+である。
+
+Boundary -1秒は、
+Boundaryに到達する前のAccess Resultを確認する
+controlとして扱う。
+
+したがって、
+
+「-1秒でFailureだったものが0秒でSuccessになった」
+
+というAccess Result上の変化と、
+
+「0秒と+1秒でReturned Seriesが変化したか」
+
+というSeries上の変化を分離して観測する。
+
+
+============================================================
+7. Returned Seriesの比較方法
+============================================================
+
+最初に成功したReturned Seriesを
+Reference Seriesとして保存する。
+
+その後の成功したReturned Seriesについて、
+
+・Copied数
+・各indexにおけるbar timestamp
+
+を比較する。
+
+Copied数が一致し、
+かつ全indexのtimestampが一致した場合、
+
+SameSeries = TRUE
+
+とする。
+
+それ以外は、
+
+SeriesChanged = TRUE
+
+として記録する。
+
+この比較は、
+「返された時系列が同一かどうか」
+を記述するためのものである。
+
+SeriesChangedは、それ自体では
+RecoveryやHistory Expansionを意味しない。
+
+
+============================================================
+8. 実験コード上の観測設計
+============================================================
+
+各Requestについて、
+
+・RequestStart
+・Success / Failure
+・Copied
+・Error
+・ReturnedFirst
+・ReturnedLast
+・TargetIncluded
+・FirstDistanceSec
+・LastDistanceSec
+・SameSeries
+・SeriesChanged
+・BarsBefore / BarsAfter
+・HistoryGrowth
+・FirstDateChanged
+・SyncChanged
+・SeriesTimes
+
+を記録する。
+
+SeriesTimesでは、
+各returned barについて
+
+index
+および
+SERIES_FIRSTDATEからの秒距離
+
+を記録する。
+
+これにより、
+Transitionを単なるFirst / Lastの変化ではなく、
+実際のtimestamp列として観測できる。
+
+また、History StateはRequest前後で
+独立して取得する。
+
+
+============================================================
+9. 観測結果
+============================================================
+
+Boundary位置ごとの結果は次の通り。
+
+【Boundary -1秒】
+
+Request：
+Failure
+
+Error：
+4401
+
+Returned Series：
+取得されなかった。
+
+
+【Boundary 0秒】
+
+Request：
+Success
+
+Returned Series：
+取得成功
+
+
+【Boundary +1秒】
+
+Request：
+Success
+
+Returned Series：
+取得成功
+
+
+今回の観測では、
+Boundary -1秒ではRequestが成立せず、
+Boundary 0秒で成立し、
+Boundary +1秒でも成立した。
+
+これはAccess Result上では、
+
+Failure
+  ↓
+Success
+  ↓
+Success
+
+という変化として観測された。
+
+
+============================================================
+10. Series Transitionの観測結果
+============================================================
+
+成功したReturned Seriesについて、
+実験コードで確立されたReference Seriesとの比較を行った。
+
+比較条件は、
+
+・Copied数が一致
+・全bar timestampが一致
+
+であり、両方を満たした場合に
+SameSeries = TRUE、
+それ以外をSeriesChanged = TRUE
+として記録する。
+
+既存のBoundary観測結果では、
+成功した0秒および+1秒の観測について、
+
+SameSeriesCount = 240
+SeriesChanged = 0
+
+が記録されている。
+
+ここでいう240は、
+0秒と+1秒を120回ずつ直接ペア比較した
+240回の独立比較を意味しない。
+
+実験コードでは、最初に成功したReturned Seriesを
+Referenceとして保存し、その後の成功Seriesを
+Referenceと比較している。
+
+したがって、この値は、
+成功したReturned Series 240観測が
+Reference Seriesと一致したことを示す。
+
+この観測結果から、今回の条件では、
+0秒および+1秒の成功Returned Seriesについて
+Referenceとの不一致は観測されなかった。
+
+ここでいう「遷移が観測されなかった」とは、
+Access Resultが変化しなかったという意味ではない。
+
+Boundary -1秒 → 0秒では
+Failure → SuccessというAccess Resultの変化が観測されている。
+
+一方、
+0秒 → +1秒では
+Success → Successであり、
+成功Returned Seriesについては
+Referenceとの不一致が観測されなかった。
+
+したがって、04でいうTransitionは、
+各位置の観測結果を順序付きで比較する観測軸であり、
+Returned Seriesの同一性判定そのものは
+Reference Seriesとの比較によって行われる。
+
+
+============================================================
+11. History Stateとの比較
+============================================================
+
+本Evidenceでは、
+Returned SeriesだけでなくHistory Stateも独立して観測する。
+
+観測対象：
+
+・HistoryGrowth
+・FirstDateChanged
+・SyncChanged
+
+今回のBoundary観測結果では、
+History Boundaryの実移動、
+History Stateの変化、
+History Expansionは観測されていない。
+
+ただし、
+
+「History Stateが変化しなかった」
+ことから
+「内部で履歴処理が一切行われなかった」
+
+とは確定しない。
+
+本Evidenceで扱うのは、
+あくまで観測されたHistory Stateの変化の有無である。
+
+
+============================================================
+12. Access ResultとSeries Transitionの分離
+============================================================
+
+04で重要なのは、
+次の二つを分離することである。
+
+【Access Result Transition】
+
+-1秒
+Failure
+  ↓
+0秒
+Success
+  ↓
++1秒
+Success
+
+
+【Returned Series Transition】
+
+0秒
+Success Series
+  ↓
++1秒
+同一Series
+
+
+つまり今回の観測では、
+
+Access Resultには変化が観測された。
+
+一方で、
+成功した0秒と+1秒のReturned Seriesには
+変化が観測されなかった。
+
+したがって、
+
+「Access Resultが変化した」
+ことと
+「Returned Seriesが変化した」
+ことは
+同一の現象として扱わない。
+
+
+============================================================
+13. 現時点で言えること
+============================================================
+
+今回の観測条件では、
+
+1. Boundary -1秒ではRequest Failure（4401）が観測された。
+
+2. Boundary 0秒ではRequestが成功した。
+
+3. Boundary +1秒でもRequestが成功した。
+
+4. Access Resultは
+   Failure → Success → Success
+   という並びで観測された。
+
+5. 成功した0秒および+1秒のReturned Seriesについて、
+   Referenceとの不一致は観測されなかった。
+
+6. SameSeriesCountは240であった。
+
+7. SeriesChangedは0であった。
+
+8. この240は、0秒と+1秒の直接ペア比較240回ではなく、
+   最初に確立されたReference Seriesと
+   成功した後続Seriesとの比較結果である。
+
+9. したがって、今回の条件では
+   0秒 → +1秒の比較対象となった成功Seriesについて、
+   Seriesの変化は観測されなかった。
+
+10. History Stateの変化および
+    History Expansionは、
+    今回の条件では観測されなかった。
+
+11. Access Resultの変化と
+    Returned Seriesの変化は、
+    別の観測対象として扱う必要がある。
+
+
+============================================================
+14. 現時点で言えないこと
+============================================================
+
+今回のEvidenceだけから、
+
+・なぜ-1秒ではFailureになるのか
+・なぜ0秒からSuccessになるのか
+・なぜ0秒と+1秒で同一Seriesになるのか
+・Access SuccessがHistory Expansionを発生させるのか
+・Returned Seriesの同一性がHistory Expansionと関係するのか
+・BoundaryがMT5内部で何を意味するのか
+・MT5内部でどのような履歴処理が行われているのか
+
+は確定できない。
+
+また、
+
+「Failure → Successになったことが
+Returned Seriesの同一性を生んだ」
+
+という因果関係も、
+このEvidenceだけでは確定しない。
+
+「Boundaryを跨いでもSeriesが変化しなかった」
+という観測事実から、
+すべてのBoundary条件でSeriesが変化しない
+と一般化することもできない。
+
+
+============================================================
+15. 03 Boundary Returned Seriesとの関係
+============================================================
+
+03では、
+
+「Boundary前後でReturned Seriesそのものに違いがあるのか？」
+
+を中心に、
+timestamp列の同一性を比較した。
+
+04では、
+
+「Request位置をBoundary前 → Boundary → Boundary後へ変化させたとき、
+Access ResultとReturned Seriesがどう遷移するのか？」
+
+を観測する。
+
+役割分担は、
+
+03
+「Seriesそのものの同一性」
+
+04
+「位置変化に伴うAccess Result / Seriesの遷移」
+
+である。
+
+04では03の結果を参照しつつも、
+Transitionという独立した観測軸として記録する。
+
+
+============================================================
+16. Boundary Chapter内での位置づけ
+============================================================
+
+Boundary Chapterの4観測ラインは、
+
+01. History Boundary Movement
+    Boundary付近の観測位置に変化が生じるのか
+
+02. Boundary Returned Detail
+    Boundary付近でどのようなReturned Resultが返るのか
+
+03. Boundary Returned Series
+    Returned Seriesそのものに違いがあるのか
+
+04. Boundary Transition Series
+    Request位置の変化に伴って
+    Access Result / Returned Seriesがどう遷移するのか
+
+である。
+
+4つは関連しているが、
+同じ観測ではない。
+
+04は、
+Boundary Chapterにおける
+「変化の過程」を観測するEvidenceとして位置づける。
+
+
+============================================================
+17. Evidenceとしての位置づけ
+============================================================
+
+本Evidenceは、
+
+Experiment
+↓
+Evidence
+↓
+Observation
+↓
+Comparison
+↓
+Candidate
+
+というRPBのEvidence研究の流れに位置する。
+
+今回固定できるのは、
+
+「Boundary -1秒ではFailure、
+0秒および+1秒ではSuccessとなり、
+成功した0秒および+1秒のReturned Seriesについて
+Referenceとの不一致は観測されなかった」
+
+という観測事実である。
+
+なお、Seriesの同一性判定は
+最初に成功したReference Seriesとの比較によって行われており、
+0秒と+1秒の直接ペア比較として記録されたものではない。
+
+この結果を、
+
+・History Expansionの原因
+・MT5内部仕様
+・Recovery条件
+
+へ直接拡張しない。
+
+
+============================================================
+18. 結論
+============================================================
+
+04 Boundary Transition Seriesでは、
+
+SERIES_FIRSTDATEを基準とした
+-1秒 / 0秒 / +1秒のRequest位置を用いて、
+Access ResultとReturned Seriesの遷移を観測した。
+
+今回の条件では、
+
+・-1秒：Request Failure（4401）
+・0秒：Request Success
+・+1秒：Request Success
+・Access Result：Failure → Success → Success
+・0秒 / +1秒の成功Series：Referenceとの不一致なし
+・SameSeriesCount = 240
+・SeriesChanged = 0
+
+が観測された。
+
+したがって、
+
+Access Resultには
+Failure → Successという変化が観測された一方、
+
+成功した0秒 → +1秒では
+Returned Seriesの遷移は観測されなかった。
+
+このことから、
+今回の条件下では、
+
+「Access Resultの遷移」
+と
+「Returned Seriesの遷移」
+
+を別の観測軸として扱うことができる。
+
+ただし、この結果は
+History Expansionの原因・条件・内部機構を
+確定するものではない。
+
+
+============================================================
+Document Status
+============================================================
+
+Document:
+RPB Boundary 04_Boundary_Transition_Series
+
+Version:
+v0.2
+
+Role:
+Boundary Detailed Evidence
+
+Status:
+Reviewed / Evidence Record
+
+Research Axis:
+Boundary → Access Result / Returned Series Transition
+
+Independent Variable:
+requestStart position relative to SERIES_FIRSTDATE
+
+Positions:
+-1s / 0s / +1s
+
+Primary Observation:
+Access Result transition and Returned Series transition
+
+Transition Rule:
+BOUNDARY_AT → BOUNDARY_PLUS1
+BOUNDARY_MINUS1 = pre-boundary control
+
+Series Comparison Rule:
+Copied count + every returned bar timestamp
+
+Total Observations:
+360 (120 per position)
+
+Recovery Classification:
+Not performed
+
+History Expansion:
+Not established
