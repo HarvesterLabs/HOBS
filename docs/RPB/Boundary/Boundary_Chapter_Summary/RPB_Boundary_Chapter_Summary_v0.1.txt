@@ -1,6 +1,6 @@
 RPB Boundary Chapter
 Chapter Summary
-Evidence・総括 v0.1
+Evidence・総括 v0.2
 
 ============================================================
 1. この総括の役割
@@ -41,6 +41,13 @@ Returned Series、History Stateは
 
 である。
 
+本Chapterでいう「Boundary」は、
+SERIES_FIRSTDATEを基準として実験上設定した
+観測上のBoundaryを意味する。
+
+これは、MT5内部仕様としての
+絶対的なBoundaryが確定したことを意味しない。
+
 この問いを一つの結果へまとめず、
 
 01. History Boundary Movement
@@ -55,27 +62,39 @@ Returned Series、History Stateは
 3. Chapter全体の観測構造
 ============================================================
 
-Boundary Chapterでは、概念的に次の流れを観測する。
+Boundary Chapterでは、概念的に次のObservation Mapを用いる。
 
 Request条件
-    ↓
-Access Result
-    ↓
+│
+├─ Access Result
+│
+├─ Returned Detail
+│
+├─ Returned Series
+│
+└─ History State
+
+この配置は内部処理の因果関係を意味しない。
+RPBでは、それぞれを独立した観測対象として扱う。
+
+Returned DetailとReturned Seriesについては、
+次のように観測対象を整理する。
+
 Returned Detail
-    ↓
+├─ ReturnedFirst
+├─ ReturnedLast
+├─ ReturnedBars
+├─ Returned Range
+└─ TargetIncluded
+
 Returned Series
-    ↓
-History State
-
-ただし、この矢印は内部処理の因果関係を意味しない。
-
-RPBでは、それぞれの層を独立した観測対象として扱う。
+└─ rates[].time の順序付きtimestamp系列
 
 特に重要なのは、
 
 Access Result
     ≠
-Returned Range
+Returned Detail
     ≠
 Returned Series
     ≠
@@ -396,8 +415,9 @@ Reference Seriesとの比較によって行われる。
 8. 01〜04を横断した共通観測
 ============================================================
 
-4つのEvidenceを横断すると、
-次の観測が整理できる。
+Boundary Chapterに属する01〜04および関連Evidenceを、
+それぞれの実験条件を保持したまま比較すると、
+次の観測上の共通点が整理できる。
 
 【A. Access Result】
 
@@ -445,7 +465,8 @@ Returned Seriesの変化
 
 【D. History State】
 
-01〜04の今回の観測条件では、
+各Evidenceで観測対象となったHistory State項目について、
+今回確認された範囲では、
 
 - History Growth
 - FirstDateChanged
@@ -512,7 +533,10 @@ Candidate 8:
 Boundary付近のAccess Result変化、
 Returned Dataの変化、
 History Stateの変化を、
-一つの現象としてまとめてはいけない。
+一つの現象としてまとめない。
+
+これは単一の観測値ではなく、
+Boundary Chapter全体で維持する研究上の整理である。
 
 
 ============================================================
@@ -724,10 +748,10 @@ Document:
 RPB Boundary Chapter Summary
 
 Version:
-v0.1
+v0.2
 
 Status:
-Draft / Chapter Summary
+Reviewed / Chapter Summary
 
 Scope:
 Boundary Chapter 01〜04
