@@ -1,0 +1,237 @@
+RPB Research Status / Freeze Record
+Version: v0.1
+Status: Frozen / Research Record
+Project: HOBS RPB Research
+Date: 2026-09-08
+
+============================================================
+1. Purpose
+============================================================
+
+This document records the current status of the HOBS RPB Research and
+defines the point at which the research is temporarily frozen.
+
+The purpose of this freeze is not to declare every RPB mechanism solved.
+It is to preserve the accumulated observations, distinguish confirmed
+observations from unresolved questions, and prevent further excavation
+from becoming a prerequisite for the already-completed HOBS MT5 VWAP.
+
+============================================================
+2. Current Decision
+============================================================
+
+RPB research is frozen at the current observation state.
+
+No further excavation of historical RPB experiment numbers, source code,
+logs, or undocumented conditions is required for the current HOBS MT5
+VWAP project.
+
+Future reopening is permitted if a later HOBS research requirement makes
+RPB necessary again.
+
+============================================================
+3. Relationship to HOBS MT5 VWAP
+============================================================
+
+The HOBS MT5 VWAP has reached its completion point independently of a
+complete explanation of MT5 historical-data expansion internals.
+
+The current HOBS VWAP research established the required observation model
+and implementation basis. Therefore, unresolved RPB questions are not
+treated as blockers for the completed VWAP.
+
+RPB is retained as supporting research, not as a remaining completion
+condition for VWAP.
+
+============================================================
+4. What RPB Established
+============================================================
+
+RPB research investigated the distinction between:
+
+- Requested access conditions
+- Returned Range / Returned Detail
+- Returned Series
+- History State
+- History Expansion
+- Boundary-related access behavior
+- Target-side dependency
+
+A central research rule was maintained throughout the research:
+
+    Request Success != Returned Range Change != History Expansion
+
+History Expansion was not inferred merely from CopyRates success.
+Observable History State changes such as SERIES_FIRSTDATE,
+SERIES_BARS_COUNT, and SERIES_SYNCHRONIZED were treated separately.
+
+The Boundary Chapter also established an observational framework around
+SERIES_FIRSTDATE. This Boundary is treated as an experimental/observational
+boundary, not as a proven absolute internal MT5 boundary.
+
+============================================================
+5. Boundary Chapter
+============================================================
+
+The Boundary Chapter was organized into four observation lines:
+
+1. History Boundary Movement
+2. Boundary Returned Detail
+3. Boundary Returned Series
+4. Boundary Transition Series
+
+The chapter was summarized while preserving differences in experimental
+conditions between the individual Evidence records.
+
+The chapter does not claim to have identified the internal mechanism of
+History Expansion.
+
+============================================================
+6. C Chapter
+============================================================
+
+The C Chapter investigated candidate conditions related to History
+Expansion.
+
+The research axes included:
+
+- C-1 RequestStart
+- C-2 RequestedBars / request range
+- C-3 access to a possible unloaded candidate region
+- C-4 Access Boundary
+- C-5 successful access versus observable History State change
+
+The conclusions are conditional on the tested experimental conditions.
+They do not establish that History Expansion never occurs.
+
+============================================================
+7. C-2 Current Freeze Point
+============================================================
+
+A C-2-specific program was identified:
+
+    HOBS_RPB_HistoryExpansionRange_Test_fixed_v2
+
+The current stored program fixes RequestStart relative to the initial
+SERIES_FIRSTDATE and varies RequestedBars.
+
+Current stored RequestedBars:
+
+    1 / 10 / 100 / 1000 / 10000
+
+Current stored execution condition:
+
+    5 ranges x 120 attempts = 600 planned observations
+
+On 2026-09-08, the current program was executed on USDJPY_z, M1.
+
+The execution produced:
+
+    600 observations
+    0 successes
+    600 failures
+
+The observed requests returned Error 4401 under the tested conditions.
+
+Because Access Success was not established, this execution does NOT prove
+that RequestedBars caused or failed to cause History Expansion. It records
+that the current C-2 apparatus did not establish successful access under
+those conditions.
+
+============================================================
+8. Unresolved Historical Numbers
+============================================================
+
+Historical RPB materials contain references to observation totals such as
+840 and 720.
+
+The currently stored C-2 fixed_v2 program does not explain the historical
+840 directly because its current RequestedBars list contains five values,
+producing 600 planned observations at 120 attempts per value.
+
+Therefore:
+
+- 840 is not reclassified as false.
+- 720 is not reclassified as false.
+- Their original experimental provenance is not currently established.
+- These numbers remain unresolved historical records.
+
+The research will not modify the current program merely to reproduce a
+historical total.
+
+If RPB is reopened in the future, the provenance of these historical
+numbers can be investigated separately.
+
+============================================================
+9. What Is NOT Claimed
+============================================================
+
+This freeze record does NOT claim:
+
+- that MT5 History Expansion has been completely explained;
+- that Error 4401 has a single proven causal explanation in every context;
+- that History Expansion never occurs;
+- that the historical 840 or 720 records are false;
+- that all RPB experiments were performed under identical conditions;
+- that Returned Range, Returned Series, History State, and History
+  Expansion are the same phenomenon.
+
+============================================================
+10. Evidence Policy After Freeze
+============================================================
+
+Existing RPB documents, experiment programs, logs, screenshots, and
+Evidence records are preserved.
+
+They should not be silently rewritten merely to make the historical
+record internally prettier.
+
+Where an inconsistency or unresolved value exists, it should be recorded
+as unresolved or condition-dependent.
+
+The purpose of preservation is reproducibility of the research history,
+not retrospective normalization.
+
+============================================================
+11. Reopening Conditions
+============================================================
+
+RPB may be reopened if one of the following becomes necessary:
+
+- HOBS requires a deeper understanding of MT5 historical-data behavior;
+- a future HOBS component depends directly on History Expansion;
+- a new reproducible Evidence record contradicts the current boundary;
+- historical experiment provenance becomes necessary for a later research
+  or implementation decision.
+
+Until such a condition arises, RPB remains frozen.
+
+============================================================
+12. Current HOBS Research Direction
+============================================================
+
+With RPB frozen, research priority returns to the main HOBS observation
+architecture and the next required observation axes.
+
+RPB is therefore treated as preserved research infrastructure and
+historical Evidence, rather than as an active blocker.
+
+============================================================
+13. Final Freeze Statement
+============================================================
+
+RPB is not considered "solved."
+
+RPB is considered:
+
+    OBSERVED
+    DOCUMENTED
+    PRESERVED
+    UNRESOLVED IN PART
+    FROZEN FOR NOW
+
+The unresolved portions remain available for future investigation, but
+they do not prevent the completed HOBS MT5 VWAP from being treated as
+complete.
+
+End of RPB Research Status / Freeze Record
