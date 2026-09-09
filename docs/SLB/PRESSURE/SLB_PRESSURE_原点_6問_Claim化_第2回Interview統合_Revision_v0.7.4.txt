@@ -3,4 +3,1015 @@ SLB PRESSURE 原点フォレンジック
 Version: v0.7.4
 Status: Revised / Final Freeze Candidate
 
-[Full v0.7.4 frozen record is preserved in this file.]
+目的:
+SLB PRESSUREの「原点（いつ・なぜ・どのように生まれたか）」を、現在のコード・第2回Interview・Historical Evidence・Reconstructionの境界を明確にした上で記録する。
+
+基本原則:
+・Current CodeとHistorical Intentを同一視しない。
+・InterviewのRecallとHistorical Evidenceを同一視しない。
+・NON-RECALLをHistorical Negative Claimへ変換しない。
+・NON-RECALLをHistorical PropositionのSupporting Evidenceとして扱わない。
+・Current Structural InterpretationからHistorical Intentを逆算しない。
+・Q1〜Q6を相互にHistorical Factを証明するEvidenceとして扱わない。
+・Inference DependencyはEvidenceではない。
+・Formation Pathは「現Evidenceでは排除されていない候補集合」としてのみ保持する。
+・Reconstruction CandidateはHistorical Evidenceによって支持された可能性集合とは扱わない。
+・HOBS PRESSUREの定義を本記録から確定しない。
+
+============================================================
+1. 6問Interviewの基本構造
+============================================================
+
+Interview
+  ↓
+Recall State
+  ↓
+Interview Claim
+
+Historical Evidence
+  ↓
+Historical Proposition
+
+Current Code
+  ↓
+Current Structural Interpretation
+
+Current Structural Interpretation
+  ↓
+Reconstruction Candidate
+
+重要:
+Interview Claim Status = CONFIRMED
+であっても、Historical Proposition Status = CONFIRMEDを意味しない。
+
+============================================================
+2. Recall State
+============================================================
+
+Recall State:
+  RECALL
+  NON-RECALL
+
+NON-RECALLの意味:
+  本人が現在のInterviewにおいて、当該事項について具体的な記憶を報告していない状態。
+
+NON-RECALLは以下を意味しない:
+  ・Historical Negative
+  ・Historical Propositionの否定
+  ・Historical Propositionの自動的なUNCONFIRMED化
+  ・仮説を支持するEvidence
+
+基本境界:
+  NON-RECALL ≠ HISTORICAL NEGATIVE
+  NON-RECALL ≠ HISTORICAL EVIDENCE
+
+Interview Claim:
+  「第2回Interviewでは具体的記憶が報告されなかった」
+  → CONFIRMED
+
+Historical Proposition:
+  「実際の初期設計でXが存在したか」
+  → Historical Evidence Coverageに従って評価
+
+============================================================
+3. Source Role
+============================================================
+
+Source Role:
+  SOURCE-CODE
+  SOURCE-RECALL
+  SOURCE-RECONSTRUCTION
+  SOURCE-METHODOLOGICAL
+
+SOURCE-CODE:
+  現在のコード構造・変数・計算処理に基づく情報。
+
+SOURCE-RECALL:
+  Interviewで本人が報告した記憶状態・回答に基づく情報。
+
+SOURCE-RECONSTRUCTION:
+  現在の構造等から構成されたHistorical Reconstruction Candidate。
+
+SOURCE-METHODOLOGICAL:
+  Evidence Coverage、Claim境界、推論制約等に関する方法論的判断。
+
+Recall StateはSource Roleではなく独立した属性として扱う。
+
+============================================================
+4. Evidence Coverage
+============================================================
+
+CODE:
+  FULL
+
+QA-R2:
+  FULL
+  ※Interview回答が確認済みという意味であり、Historical Factの完全証明を意味しない。
+
+DOCUMENT:
+  PARTIAL
+
+HISTORICAL:
+  PARTIAL / 未充足
+
+Evidence CoverageはClaimごとに評価する。
+
+============================================================
+5. Q1 Claim Integration
+============================================================
+
+Question Q1:
+  PRESSUREを作り始めたとき、最初に何を観測したかったのか？
+
+CLAIM-Q1-01
+内容:
+  第2回Interviewでは、PRESSUREの初期観測対象について具体的な記憶が報告されていない。
+
+Source:
+  第2回Historical Recall Interview Q1
+
+Source Role:
+  SOURCE-RECALL
+
+Recall State:
+  NON-RECALL
+
+Interview Claim Status:
+  CONFIRMED
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  RECALL RECORD
+
+Confidence:
+  HIGH
+  ※「Interviewで具体的記憶が報告されなかった」という事実について。
+
+Falsification Condition:
+  N/A
+  ※後日のHistorical EvidenceはInterview記録上のNON-RECALLを反証しない。
+
+Update Condition:
+  初期PRESSUREの観測対象・設計判断を直接示す日付付きHistorical Evidenceが発見された場合、Historical Proposition Statusを更新する。
+
+CLAIM-Q1-02
+内容:
+  現在のSLBコードから、buyPressure / sellPressure、buyRatio / sellRatio等の構造を確認できる。
+  ただし、これらの現在構造が初期設計時の意図と同一であったとは確定しない。
+
+Source:
+  Current SLB v37.2 Code
+
+Source Role:
+  SOURCE-CODE
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  CURRENT FACT / HISTORICAL-UNKNOWN
+
+Confidence:
+  HIGH for current code
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  Historical Evidenceが発見された場合にHistorical Propositionを更新する。
+
+============================================================
+6. Q2 Claim Integration
+============================================================
+
+Question Q2:
+  PRESSUREを設計した当初、買い側と売り側を、それぞれ独立した観測現象として扱っていたのか？
+
+CLAIM-Q2-01
+内容:
+  第2回Interviewでは、Buy/Sellを初期設計時にどのように扱っていたかについて具体的な記憶が報告されていない。
+
+Source:
+  第2回Historical Recall Interview Q2
+
+Source Role:
+  SOURCE-RECALL
+
+Recall State:
+  NON-RECALL
+
+Interview Claim Status:
+  CONFIRMED
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  RECALL RECORD
+
+Confidence:
+  HIGH
+  ※Interviewで具体的記憶が報告されなかったという事実について。
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  初期Buy/Sell設計を直接示すHistorical Evidenceが発見された場合、Historical Proposition Statusを更新する。
+
+CLAIM-Q2-02
+内容:
+  現在確認したHistorical Evidence Coverageの範囲では、Buy/Sellの初期設計上の扱いを歴史的に確定できない。
+
+Source:
+  Historical Evidence Coverage / Methodological Audit
+
+Source Role:
+  SOURCE-METHODOLOGICAL
+
+Recall State:
+  N/A
+
+Temporal Position:
+  Historical-Unknown
+
+Evidence Coverage:
+  COVERAGE-HISTORICAL / PARTIAL / 未充足
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  METHODOLOGICAL
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  初期Buy/Sellの扱いを直接示すHistorical Evidenceが発見された場合。
+
+============================================================
+7. Q3 Claim Integration
+============================================================
+
+Question Q3:
+  なぜPRESSUREは最終的にbuyRatio / sellRatioという形になったのか？また pressureLen=20には思想上・設計上の理由があったのか？
+
+CLAIM-Q3-01
+内容:
+  buyRatio / sellRatioという形式を採用した具体的な理由について、第2回Interviewでは具体的な記憶が報告されていない。
+
+Source:
+  第2回Historical Recall Interview Q3
+
+Source Role:
+  SOURCE-RECALL
+
+Recall State:
+  NON-RECALL
+
+Interview Claim Status:
+  CONFIRMED
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  RECALL RECORD
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  ratio採用理由を直接示すHistorical Evidenceが発見された場合、Historical Proposition Statusを更新する。
+
+CLAIM-Q3-02A
+内容:
+  現在のSLB v37.2コードにはpressureLen=20が存在し、buyPressure / sellPressureおよびbuyRatio / sellRatioの計算に使用されている。
+
+Source:
+  Current SLB v37.2 Code
+
+Source Role:
+  SOURCE-CODE
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  CURRENT FACT
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  Current Codeの変更が発生した場合は別Versionとして記録する。Historical Evidence発見時はHistorical Propositionを更新する。
+
+CLAIM-Q3-02B
+内容:
+  pressureLen=20という値を採用した思想上・設計上の具体的理由について、第2回Interviewでは明確な記憶が報告されていない。
+
+Source:
+  第2回Historical Recall Interview Q3
+
+Source Role:
+  SOURCE-RECALL
+
+Recall State:
+  NON-RECALL
+
+Interview Claim Status:
+  CONFIRMED
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  RECALL RECORD
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  pressureLen=20の採用理由を直接示すHistorical Evidenceが発見された場合。
+
+CLAIM-Q3-02C
+内容:
+  現在のpressureLen=20という値から、過去の採用理由を逆算することはできない。
+
+Source:
+  Current Code + Methodological Audit
+
+Source Role:
+  SOURCE-METHODOLOGICAL
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  METHODOLOGICAL
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  日付付きHistorical Evidenceによって過去の採用理由が直接確認された場合。
+
+CLAIM-Q3-03
+内容:
+  現在のbuyRatio / sellRatio構造から、初期設計時にratioを意図的に採用した理由を確定することはできない。
+
+Source:
+  Current Code + Historical Evidence Coverage
+
+Source Role:
+  SOURCE-METHODOLOGICAL
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  METHODOLOGICAL
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  ratio採用の歴史的理由を直接示すHistorical Evidenceが発見された場合。
+
+============================================================
+8. Q4 Claim Integration
+============================================================
+
+Question Q4:
+  PRESSUREは、価格が上がった／下がった「理由」を説明するために設計されたのか？それとも、価格とは別の観測対象を見るために考えられたのか？
+
+CLAIM-Q4-01
+内容:
+  第2回Interviewでは、PRESSUREの初期目的について、具体的な歴史的記憶が報告されていない。
+
+Source:
+  第2回Historical Recall Interview Q4
+
+Source Role:
+  SOURCE-RECALL
+
+Recall State:
+  NON-RECALL
+
+Interview Claim Status:
+  CONFIRMED
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  RECALL RECORD
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  初期目的を直接示すHistorical Evidenceが発見された場合。
+
+CLAIM-Q4-02A
+内容:
+  「PRESSUREは価格上昇・下降の理由を説明する目的ではなかった」という命題について、第2回Interviewでは具体的記憶が報告されていない。
+
+Source:
+  第2回Historical Recall Interview Q4
+
+Source Role:
+  SOURCE-RECALL
+
+Recall State:
+  NON-RECALL
+
+Interview Claim Status:
+  CONFIRMED
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  RECALL RECORD
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  Historical Evidenceが発見された場合、Historical Proposition Statusを更新する。
+
+CLAIM-Q4-02B
+内容:
+  現在確認したHistorical Evidence Coverageでは、「PRESSUREは価格上昇・下降の理由を説明する目的ではなかった」という歴史命題を確定できない。
+
+Source:
+  Historical Evidence Coverage / Methodological Audit
+
+Source Role:
+  SOURCE-METHODOLOGICAL
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  METHODOLOGICAL
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  当時の目的を直接示すHistorical Evidenceが発見された場合。
+
+IMPORTANT:
+  「価格とは別の観測対象だった」と「価格の理由を説明する目的ではなかった」は同一命題ではない。
+
+============================================================
+9. Q5 Claim Integration
+============================================================
+
+Question Q5:
+  なぜPRESSUREからPREYが生まれた？
+
+CLAIM-Q5-CURRENT
+内容:
+  現在のSLBコード上ではPRESSUREとPREYは関連するモジュールとして存在する。ただし、現在のモジュール関係は歴史的因果を証明しない。
+
+Source:
+  Current SLB v37.2 Code
+
+Source Role:
+  SOURCE-CODE
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  CURRENT FACT / HISTORICAL-UNKNOWN
+
+Confidence:
+  HIGH for current structure
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  Historical Evidenceが発見された場合、Historical Propositionを更新する。
+
+CLAIM-Q5-HISTORY
+内容:
+  「PRESSUREがPREYを生んだ」という歴史的順序・因果関係について、第2回Interviewでは具体的な記憶が報告されていない。
+
+Source:
+  第2回Historical Recall Interview Q5
+
+Source Role:
+  SOURCE-RECALL
+
+Recall State:
+  NON-RECALL
+
+Interview Claim Status:
+  CONFIRMED
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  RECALL RECORD
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  PRESSUREとPREYの形成順序・因果を直接示すHistorical Evidenceが発見された場合。
+
+CLAIM-Q5-02
+内容:
+  現在確認したHistorical Evidence Coverageでは、「PRESSUREがPREYを生んだ」という歴史的因果関係を確定できない。
+
+Source:
+  Historical Evidence Coverage / Methodological Audit
+
+Source Role:
+  SOURCE-METHODOLOGICAL
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  METHODOLOGICAL
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  PRESSURE / PREYの形成順序・因果を直接示すHistorical Evidenceが発見された場合。
+
+============================================================
+10. Q6 Claim Integration
+============================================================
+
+Question Q6:
+  「PRESSURE」という名前は概念が先？名前が先？
+
+CLAIM-Q6-CURRENT
+内容:
+  現在のSLB v37.2コードにはPRESSUREという名称、buyPressure / sellPressure、buyRatio / sellRatio、pressureLen等が存在する。
+
+Source:
+  Current SLB v37.2 Code
+
+Source Role:
+  SOURCE-CODE
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  CURRENT FACT / HISTORICAL-UNKNOWN
+
+Confidence:
+  HIGH for current code
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  Historical Evidenceが発見された場合、Historical Propositionを更新する。
+
+CLAIM-Q6-HISTORY
+内容:
+  PRESSUREという名称の命名時期・命名理由・概念と名称の前後関係について、第2回Interviewでは具体的な記憶が報告されていない。
+
+Source:
+  第2回Historical Recall Interview Q6
+
+Source Role:
+  SOURCE-RECALL
+
+Recall State:
+  NON-RECALL
+
+Interview Claim Status:
+  CONFIRMED
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  RECALL RECORD
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  命名時期・命名理由・名称と概念の前後関係を直接示すHistorical Evidenceが発見された場合。
+
+CLAIM-Q6-02
+内容:
+  現在のPRESSUREという名称から、当時も同じ概念・同じ意味で使用されていたとは確定できない。
+
+Source:
+  Current Code + Historical Evidence Coverage / Methodological Audit
+
+Source Role:
+  SOURCE-METHODOLOGICAL
+
+Recall State:
+  N/A
+
+Interview Claim Status:
+  N/A
+
+Historical Proposition Status:
+  UNCONFIRMED
+
+Epistemic Status:
+  METHODOLOGICAL
+
+Confidence:
+  HIGH
+
+Falsification Condition:
+  N/A
+
+Update Condition:
+  命名時期・意味・概念との関係を直接示すHistorical Evidenceが発見された場合。
+
+============================================================
+11. Claim Dependency
+============================================================
+
+Q1 → Q1 Claim
+Q2 → Q2 Claim
+Q3 → Q3 Claim
+Q4 → Q4 Claim
+Q5 → Q5 Claim
+Q6 → Q6 Claim
+
+Q1〜Q6は並列的なInterview Recordとして扱う。
+
+重要:
+  Q1 → Q2 → Q3 → Q4 → Q5 → Q6
+  というHistorical Causal Chainを構成しない。
+
+また、Q1〜Q6のInterview回答は、相互にHistorical Factを証明する独立Evidenceではない。
+
+Inference DependencyはEvidenceではない。
+
+============================================================
+12. Concept Drift Boundary
+============================================================
+
+現在コード構造の整理として、以下を記録する。
+
+OHLC
+ ↓
+陽線 / 陰線
+ ↓
+buyPressure / sellPressure
+ ↓
+buyRatio / sellRatio
+ ↓
+方向的偏り
+ ↓
+PRESSURE
+
+この図はCurrent Structural Interpretationの整理であり、Historical Design Sequenceではない。
+
+重要な禁止事項:
+
+1. buyRatio / sellRatio = PRESSURE としない。
+2. 陽線・陰線の分布 = 市場内部の買い・売りの力 としない。
+3. 現在PRESSURE = 初期設計時のPRESSURE としない。
+4. 現在の計算構造から過去の設計意図を逆算しない。
+
+「方向的偏り」はCurrent Structural Interpretationとして扱い、Current Code上の変数名・関数名そのものとは区別する。
+
+============================================================
+13. CLAIM-06 Boundary Audit
+============================================================
+
+CLAIM-06はHistorical Claimではなく、Current Structureから生成されたReconstruction Candidateである。
+
+Current Structure:
+  buyPressure / sellPressure
+        ↓
+  buyRatio / sellRatio
+
+Current Structural Interpretation:
+  方向情報の偏りとして読むことが可能
+
+Historical Proposition:
+  「方向情報の偏りを表現するためにratioを採用した」
+
+このHistorical Propositionは、現在の構造だけでは確認できない。
+
+また、Q3のNON-RECALL:
+  「ratio採用理由について具体的記憶が報告されていない」
+
+は、CLAIM-06を支持するEvidenceではない。
+
+したがって、
+
+  Q3 NON-RECALL
+      X
+      ↓
+  CLAIM-06 Historical Support
+
+という接続は禁止する。
+
+CLAIM-06の位置づけ:
+  Source Role:
+    SOURCE-RECONSTRUCTION
+
+  Epistemic Status:
+    RECONSTRUCTION CANDIDATE
+
+  Supporting Historical Evidence:
+    なし
+
+  Confidence:
+    LOW
+
+Falsification Condition:
+  N/A
+  ※Historical Factを主張するClaimではなく、Current Structureから作られたCandidateである。
+
+Update Condition:
+  ratio採用の歴史的理由を直接示すHistorical Evidenceが発見された場合、本CandidateをそのEvidenceと照合し、Historical Proposition Statusを更新する。
+
+============================================================
+14. Formation Path
+============================================================
+
+Formation Pathは、以下のように扱う。
+
+「現Evidenceでは排除されていない候補集合」
+
+これはEvidenceによって支持された可能性集合ではない。
+
+候補例:
+  ・PRESSUREからPREYが形成された
+  ・PREYが独立した問題として先に存在した
+  ・単純な状態観測から後にPREYが整理された
+  ・複数の要素が同時に設計された
+  ・その他
+
+これらに順位・確率・もっともらしさを付与しない。
+
+============================================================
+15. Historical Reconstruction Boundary
+============================================================
+
+Historical Reconstructionは、Current CodeやInterviewから過去を説明するための候補仮説であり、Historical Evidenceそのものではない。
+
+現在構造から構成可能な最小仮説として、以下を保持する。
+
+「価格に現れた方向情報を何らかの観測対象として扱う形成過程が存在した可能性」
+
+Epistemic Status:
+  RECONSTRUCTED / LOW CONFIDENCE
+
+この文はHistorical Factの確定ではない。
+
+以下は確定しない:
+  ・最初からBuy/Sell方向の偏りをPRESSUREとして設計したこと
+  ・ratioを意図的に採用したこと
+  ・pressureLen=20に特定の思想的理由があったこと
+  ・PRESSURE → PREY → RETENTION → FATIGUE → RELEASE/RLFという歴史的形成順序
+  ・PRESSUREという名称が概念より先か後か
+
+============================================================
+16. Negative Claim / Epistemic Boundary Audit
+============================================================
+
+A. HISTORICAL NEGATIVE
+  「Xは存在しなかった」
+
+B. HISTORICAL UNCONFIRMED
+  「Xは現在のHistorical Evidenceでは確認できない」
+
+C. RECALL NON-RECALL
+  「本人はXを覚えていない／具体的記憶を報告していない」
+
+中心はCである。
+
+C → Bの移行は自動ではない。
+Bを記録するには、別途Historical Evidence Coverageを評価する。
+
+Interview Claim Status:
+  Interviewで何が報告されたかについての状態。
+
+Historical Proposition Status:
+  実際の過去について何が確認できるかの状態。
+
+Methodological Judgment:
+  現在のEvidence Coverageから何が言えるかについての判断。
+
+この3つを混同しない。
+
+============================================================
+17. Current / Recall / Historical / Reconstructionの境界
+============================================================
+
+Current Code:
+  現在の実装事実。
+
+Current Structural Interpretation:
+  現在の実装構造をどのように読むか。
+
+Recall:
+  本人が現在報告した記憶状態。
+
+Historical Evidence:
+  過去の設計・判断・現象を直接確認し得る資料。
+
+Historical Proposition:
+  過去について検証対象となる命題。
+
+Reconstruction Candidate:
+  現在構造等から構成された、まだHistorical Evidenceにより支持されていない候補仮説。
+
+============================================================
+18. Historical Evidenceが発見された場合のUpdate Rule
+============================================================
+
+新しいHistorical Evidenceが発見された場合:
+
+1. 該当するHistorical Propositionを特定する。
+2. Evidenceの日時・出典・対象を記録する。
+3. Evidence Coverageを更新する。
+4. Supporting / Contradicting / Contextの役割を区別する。
+5. 必要な該当Claimのみ更新する。
+6. InterviewのNON-RECALL状態そのものは変更しない。
+7. Historical Proposition StatusのみEvidenceに応じて更新する。
+8. Reconstruction Candidateは新Evidenceと照合し、必要なら位置づけを更新する。
+
+Historical Evidenceの発見は、過去のInterviewで「覚えていなかった」という事実を反証しない。
+
+============================================================
+19. Freeze Scope
+============================================================
+
+今回のv0.7.4で固定するもの:
+
+・Q1〜Q6のInterview Claim接続
+・Recall State
+・Interview Claim Status
+・Historical Proposition Status
+・Source Role
+・Evidence Coverage
+・v0.6 Claim Dependency
+・NON-RECALLとHistorical Negativeの分離
+・NON-RECALLとHistorical Propositionの分離
+・CLAIM-06のSOURCE-RECONSTRUCTION化
+・CLAIM-06のSupporting Historical Evidence = なし
+・Formation Pathの候補集合化
+・Historical ReconstructionのLOW CONFIDENCE化
+・Current CodeとHistorical Intentの分離
+
+新規Historical Claimは追加しない。
+新規Research Claimは追加しない。
+
+============================================================
+20. Final Review Decision
+============================================================
+
+Final Review:
+  PASS — FREEZE
+
+SLB PRESSURE 原点フォレンジック v0.7.4
+  Frozen Record
+
+意味:
+  2026年現在確認できたCode / Interview / Evidence / Reconstructionの境界を、この状態で固定保存する。
+
+意味しないこと:
+  「Historical Truthがすべて確定した」という意味ではない。
+
+今後の扱い:
+  Historical Evidenceが発見された場合のみ、該当Claimを更新する。
+  それまでは本記録を固定する。
+
+============================================================
+21. Future Minor Improvement — Freeze解除不要
+============================================================
+
+Section 9の現在構造図にある以下の表現について、将来の改訂機会に出典属性を明示できる。
+
+・「方向的偏り」
+・「buyPressure / sellPressure」
+
+特に「方向的偏り」は、Current Code上の変数名・関数名そのものではなく、Current Structural Interpretationとして付されたラベルである可能性があるため、将来、Source Roleを図中にも付記すると記録としてさらに強固になる。
+
+この申し送りはv0.7.4のFreezeを妨げない。
+
+============================================================
+22. Final Statement
+============================================================
+
+SLB PRESSURE 原点フォレンジック v0.7.4は、
+
+OBSERVED / DOCUMENTED / PRESERVED / UNRESOLVED IN PART / FROZEN
+
+として扱う。
+
+現在のコード、InterviewのRecall、Historical Evidence、Current Structural Interpretation、Historical Proposition、Reconstruction Candidateを混同しない。
+
+「分からないこと」を「なかったこと」にしない。
+「現在の構造」を「過去の意図」にしない。
+「可能性」を「Evidence-supported claim」にしない。
+
+この境界を維持したまま、v0.7.4をFrozen Recordとする。
