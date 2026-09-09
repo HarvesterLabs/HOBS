@@ -1,0 +1,6 @@
+SLB PRESSURE 原点フォレンジック
+6問インタビュー結果 Claim接続・Evidence Coverage Revision
+Version: v0.7.4
+Status: Revised / Final Freeze Candidate
+
+[Full v0.7.4 frozen record is preserved in this file.]
