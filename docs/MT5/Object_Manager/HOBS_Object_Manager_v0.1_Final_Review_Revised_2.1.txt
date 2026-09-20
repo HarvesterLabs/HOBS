@@ -1,0 +1,229 @@
+HOBS Object Manager v0.1
+Final Review / Revised 2.1
+Status: FROZEN
+Date: 2026-09-20
+
+1. Purpose & Philosophy
+HOBS Object Manager is not merely an MT5 drawing-object manager.
+It manages HOBS Objects as logical observation units that identify chart positions, regions, and structures and preserve their geometry, meaning, state, history, and relations.
+
+HOBS Object != MT5 Object.
+An MT5 Object is a chart representation of a HOBS Object.
+The existence, name, or state of an MT5 Object is not the condition for the existence of a HOBS Object.
+
+2. Architecture & Responsibility
+HOBS Object is the logical observation unit and Source of Truth.
+Its core includes:
+- Identity
+- Type (fixed)
+- Geometry
+- Meaning
+- State
+- History
+- Relations
+- Lifecycle
+
+Observation, Evidence, and Event are HOBS knowledge elements related to HOBS Objects. They are not CRUD-managed entities of HOBS Object Manager v0.1.
+
+Architecture invariant:
+HOBS Object Manager feature additions are judged by whether they preserve and operate on HOBS Object Identity, Meaning, State, History, Relation, and Lifecycle.
+
+3. Representation
+HOBS Object
+  -> Representation
+  -> MT5 Object
+  -> Chart
+
+MT5 Object is a representation and is not the HOBS Object itself.
+A HOBS Object may retain Identity, History, and Relations even when its MT5 representation does not exist.
+Representation synchronization is defined separately.
+
+4. Object Tree
+Object Tree displays HOBS Objects in Z-order.
+Columns are independent:
+- Object ID
+- Type
+- Meaning
+- State
+
+The display label is not context-dependent.
+Object Tree also provides Z-order management:
+- Bring Forward
+- Send Backward
+- Bring to Front
+- Send to Back
+- Drag & Drop
+- Cursor Select
+
+Z-order is display order, not logical parent-child structure.
+Z-order changes are not History.
+
+5. Lifecycle & State
+State enum:
+- CREATED
+- ACTIVE
+- OBSERVING
+- INVALIDATED
+- ARCHIVED
+
+INVALIDATED means:
+The current Meaning can no longer be maintained observationally.
+
+It does not mean that the MT5 Object is invalid, nor does it assert absolute truth/falsity.
+
+ARCHIVED:
+- non-active
+- read-only in principle in v0.1
+- Identity, Meaning, Geometry, History, Relations, etc. are retained
+- Restore / reactivation is undefined in v0.1
+
+The lifecycle diagram is representative and does not define one mandatory transition path.
+
+6. Delete / Archive / Undo / Redo
+Delete:
+Explicit user operation for accidental or unwanted Objects that should not remain as recording targets.
+
+Archive:
+Used for meaningful Objects that should remain preserved.
+
+Undo:
+Cancels the latest reversible operation and restores the state immediately before that operation.
+
+Redo:
+Reapplies the cancelled operation.
+
+Undo is not Restore.
+Restore means business/lifecycle reactivation of an ARCHIVED Object and is undefined in v0.1.
+
+Delete -> Undo restores the same HOBS Object ID.
+Archive -> Undo restores the state immediately before Archive.
+
+7. History
+HOBS Object History is:
+"History = HOBS Objectに発生した意味のある状態・属性変更の履歴"
+
+History is not a complete record of every UI operation.
+
+Record:
+- Object Created
+- Meaning Changed
+- State Changed
+- Confirmed Geometry Changed
+- Relation Changed
+- Observation / Evidence / Event relationship changed
+- Copy / Derived
+- Alert creation / change
+
+Do not record:
+- Color
+- Visibility
+- Z-order
+- Lock / Unlock
+- Temporary selection/highlight
+- Drag intermediate movement
+- Edit start/cancel
+- Other temporary display operations
+
+A confirmed Geometry change is recorded as one History event.
+Intermediate drag states are not recorded.
+
+8. Object Type
+Object Type is fixed at creation.
+v0.1 Type is not editable.
+Geometry changes do not change Type.
+Meaning is independent from Type and may change.
+If a different Type is required, create a new HOBS Object and optionally relate it with DERIVED_FROM.
+
+9. Identity
+HOBS Object ID:
+- independent from MT5 Object ID/name
+- lifetime-unique
+- persistent across sessions
+- never reused
+- remains associated with the Object across Delete/Archive/Undo
+- is not a session-scoped identifier
+
+Example:
+HOBS Object ID: HOBJ-0027
+
+10. Meaning / State separation
+Meaning is the observer's interpretation.
+State is the current lifecycle state.
+They are independent.
+
+Example:
+Meaning = RESISTANCE_CANDIDATE
+State = OBSERVING
+
+Meaning is not automatically truth.
+
+11. Relations
+v0.1 relation types:
+- OBSERVED_IN
+- SUPPORTED_BY
+- ASSOCIATED_WITH
+- DERIVED_FROM
+- PARENT_OF
+
+SUPPORTED_BY specifically means that Evidence supports the Object's Meaning.
+It does not mean that Evidence supports the existence of the Object itself or the Observation itself.
+
+PARENT_OF is a logical parent-child relation.
+It is independent from Z-order.
+
+12. Lock / Display
+Visibility, Color, Z-order, and Lock are not semantic/lifecycle properties.
+
+Lock is user-edit protection.
+Lock/Unlock is not History.
+
+13. Cursor Select
+Shortcut: Z
+Cursor Select targets a HOBS Object, not a raw MT5 Object.
+
+Controls:
+- Up / Down: move Z-order
+- Enter: confirm
+- Esc: cancel
+
+14. Detail Panel
+Detail Panel contains:
+- Object Header
+- Identity
+- Geometry
+- Meaning
+- State
+- Relations
+- Display
+- Protection
+- History
+- Actions
+
+Actions include:
+- EDIT
+- FOCUS
+- COPY/DERIVE
+- ALERT
+- ARCHIVE
+
+DELETE is an explicit lifecycle operation but is not treated as the normal preservation action.
+
+15. Frozen Principles
+1. HOBS Object != MT5 Object.
+2. HOBS Object Manager manages HOBS Objects.
+3. Type is fixed after creation.
+4. Type and Meaning are separate.
+5. Meaning and State are separate.
+6. State and History are separate.
+7. History records meaningful changes only.
+8. Undo/Redo is separate from History.
+9. Archive preserves the Object as non-active.
+10. HOBS Object ID is persistent and never reused.
+11. Z-order is display order, not logical hierarchy.
+12. PARENT_OF is independent from Z-order.
+13. Observation / Evidence / Event are relation targets, not CRUD entities of this Manager.
+14. HOBS Object is Source of Truth; MT5 Object is Representation.
+
+Final Review:
+PASS
+FROZEN
