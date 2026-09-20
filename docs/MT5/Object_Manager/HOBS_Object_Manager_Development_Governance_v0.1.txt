@@ -1,0 +1,103 @@
+HOBS Object Manager v0.1
+Development & Review Governance
+Status: ADOPTED
+Date: 2026-09-20
+
+1. Development Principle
+Each STEP is reviewed before it is frozen.
+The development process separates design, contradiction review, implementation review, final audit, and implementation.
+
+2. Roles
+
+Teacher (先生)
+- Design and overall coordination
+- Integrates the user's intent into specifications
+- Coordinates STEP progression
+- Integrates review findings
+- Does not serve as the sole final judge
+
+玲先生
+- Independent contradiction review
+- Tests concepts, boundaries, definitions, consistency, and unsupported assumptions
+- Does not protect the design from criticism
+
+主任ちゃん
+- Implementation audit
+- Checks implementability, structural consistency, UI behavior, and MT5/MQL5 compatibility
+- Does not replace conceptual contradiction review
+
+HOBS Final Audit Protocol
+- No new personality is created.
+- It is an impersonal final audit process and fixed set of criteria.
+- It performs the final cross-STEP consistency check.
+- It determines whether the completed specification can be treated as the final FROZEN SPEC.
+
+田中 / Codex
+- Implementation of the FROZEN SPEC
+- Implementation is performed after final specification freeze.
+- Implementation is audited against the FROZEN SPEC separately.
+
+3. STEP Review Flow
+
+STEP Definition
+  -> 玲先生 Review
+  -> 主任ちゃん Review
+  -> Resolve blockers
+  -> Re-review if required
+  -> STEP FROZEN
+
+No STEP is considered frozen merely because a draft has been written.
+
+4. Final Audit Flow
+
+All required STEPs FROZEN
+  -> HOBS Final Audit Protocol
+  -> Cross-STEP consistency check
+  -> Scope check
+  -> Definition/boundary check
+  -> FROZEN SPEC confirmation
+  -> FINAL PASS
+  -> Implementation
+
+5. Final Audit Principle
+The final audit is not a new design session.
+It does not exist to add features or generate new ideas.
+Its purpose is to determine whether the already reviewed and frozen specifications form one internally consistent whole.
+
+6. Change Control
+A FROZEN STEP must not be silently modified because of a later discovery.
+
+If a later STEP exposes a problem in an earlier frozen STEP:
+- issue a change request against the affected STEP
+- review the change
+- revise the affected STEP
+- re-freeze it
+- re-check dependent STEPs as necessary
+
+7. Separation of Judgement
+No single role is responsible for every form of correctness.
+
+Conceptual validity:
+玲先生
+
+Implementation validity:
+主任ちゃん
+
+Overall specification integration:
+先生
+
+Final cross-STEP audit:
+HOBS Final Audit Protocol
+
+Implementation:
+田中 / Codex
+
+8. Final Authority
+The FROZEN SPEC is the authoritative implementation target.
+The human project owner (ハーベスター) retains the final decision to adopt or release the specification.
+
+9. Adopted Policy
+B案 is formally adopted:
+"新人格は作らず、「HOBS Final Audit Protocol」という無人格の最終監査工程を作る。"
+
+This policy supersedes the proposal to create a new final-auditor personality.
