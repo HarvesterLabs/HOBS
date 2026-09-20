@@ -1,0 +1,224 @@
+HOBS Object Manager v0.1
+STEP 01 - Data Model Specification
+Status: REVIEW TARGET / NOT YET FROZEN
+Date: 2026-09-20
+
+1. Purpose
+STEP 01 defines the logical data model of HOBS Object Manager.
+The HOBS Object is the central logical entity.
+MT5 Object is treated as a separate representation.
+
+2. HOBS Object
+HOBS Object is the logical observation unit managed by HOBS Object Manager.
+
+Definition:
+"HOBS Objectとは、チャート上の特定の位置・領域・構造を観測対象として識別し、その形状・意味・状態・履歴を管理するための論理的観測単位である。"
+
+3. Identity
+Required:
+- object_id
+
+Rules:
+- HOBS Object ID is independent from MT5 Object ID/name.
+- ID is lifetime-unique.
+- ID is persistent across sessions.
+- ID is never reused.
+- MT5 Object existence is not a prerequisite for HOBS Object existence.
+
+4. Object Type
+Type is fixed at Object creation.
+v0.1 Type is immutable.
+Type is an enum, not free text.
+
+Geometry changes do not change Type.
+Meaning is independent from Type.
+
+Exact complete Type enumeration remains a separate specification item.
+
+5. Geometry
+Geometry is type-aware and represents the actual observation geometry.
+
+Examples:
+- HORIZONTAL_LINE: price
+- TRENDLINE: point A / point B
+- BOX: left / right / top / bottom
+
+Geometry is associated with symbol and timeframe context.
+
+A confirmed geometry change is a meaningful change and can produce one History event.
+Intermediate drag movement is not recorded.
+
+6. Meaning
+Meaning consists of:
+- meaning_type
+- optional note
+
+Meaning is the observer's interpretation.
+Meaning is not a statement of absolute truth.
+Meaning can change independently of Type.
+
+Meaning changes are History events.
+
+7. State
+State enum:
+- CREATED
+- ACTIVE
+- OBSERVING
+- INVALIDATED
+- ARCHIVED
+
+Meaning and State are separate.
+
+INVALIDATED:
+"現在のMeaningが観測上維持できなくなったことを示すHOBS Objectの状態"
+
+ARCHIVED:
+- non-active
+- read-only in principle in v0.1
+- Identity, History, Relations, etc. retained
+
+8. History
+Proposed logical entity:
+HOBSHistoryEntry
+
+Basic conceptual fields:
+- history_id
+- object_id
+- event_type
+- timestamp
+- before
+- after
+
+History records meaningful state/attribute changes.
+History is not an event log of every UI operation.
+
+History is separate from:
+- current State
+- UndoStack
+- RedoStack
+
+9. Relation
+Proposed logical entity:
+HOBSRelation
+
+Basic fields:
+- relation_type
+- target_type
+- target_id
+
+v0.1 relation types:
+- OBSERVED_IN
+- SUPPORTED_BY
+- ASSOCIATED_WITH
+- DERIVED_FROM
+- PARENT_OF
+
+SUPPORTED_BY:
+Evidence supports the Object's Meaning.
+It does not support the existence of the Object or the Observation itself.
+
+10. Provenance
+Conceptual fields:
+- creator
+- created_at
+- updated_at
+
+Creator candidates:
+- HUMAN
+- HOBS
+- IMPORTED
+
+11. Representation
+Proposed separate entity:
+HOBSRepresentation
+
+Conceptual relationship:
+HOBS Object
+  -> Representation
+  -> MT5 Object
+
+HOBS Object is Source of Truth.
+MT5 Object is Representation.
+
+Exact 1:1 / 1:N Representation cardinality and synchronization rules are deferred to a separate Representation Synchronization Specification.
+
+12. Display / Protection
+Display and protection are separate from semantic/lifecycle data.
+
+Display:
+- Visibility
+- Color
+- Z-order
+
+Protection:
+- Lock
+
+These do not belong to Meaning or State.
+They are not History in v0.1.
+
+13. Undo / Redo
+Undo/Redo is an operation mechanism, not part of HOBS Object History.
+
+Undo:
+restore state immediately before the latest reversible operation.
+
+Redo:
+reapply the cancelled operation.
+
+UndoStack / RedoStack are distinct from HOBSHistory.
+
+14. Data Model Invariants
+DM-INVARIANT-01
+HOBS Object ID is independent from MT5 Object ID.
+
+DM-INVARIANT-02
+HOBS Object ID is persistent, unique, and never reused.
+
+DM-INVARIANT-03
+Object Type is immutable after creation.
+
+DM-INVARIANT-04
+Type and Meaning are distinct.
+
+DM-INVARIANT-05
+Meaning and State are distinct.
+
+DM-INVARIANT-06
+State and History are distinct.
+
+DM-INVARIANT-07
+History and Undo/Redo are distinct.
+
+DM-INVARIANT-08
+Relation and History are distinct.
+
+DM-INVARIANT-09
+HOBS Object is Source of Truth; MT5 Object is Representation.
+
+DM-INVARIANT-10
+SUPPORTED_BY supports Object Meaning via Evidence only.
+
+DM-INVARIANT-11
+Archive retains Identity, History, Relations, and other Object information.
+
+DM-INVARIANT-12
+Archive is read-only in principle in v0.1.
+
+15. STEP 01 Boundary
+The following are not finalized by STEP 01:
+- complete Object Type enum
+- Representation cardinality
+- MT5 Object disappearance synchronization
+- complete State Transition Matrix
+- Delete implementation
+- Archive implementation
+- internal Undo/Redo architecture
+- UI state model
+- Repository persistence
+- concrete MQL5 class design
+
+These are handled in later specifications.
+
+Review Status:
+To be reviewed by 玲先生 (反証査読) and 主任ちゃん (実装監査).
+STEP 01 becomes FROZEN only after both reviews and resolution of any blockers.
