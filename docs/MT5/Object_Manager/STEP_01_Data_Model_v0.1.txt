@@ -1,224 +1,999 @@
 HOBS Object Manager v0.1
-STEP 01 - Data Model Specification
-Status: REVIEW TARGET / NOT YET FROZEN
-Date: 2026-09-20
+STEP 01 — データモデル仕様
+正式仕様 — Revision 3（日本語版）
+日付：2026-09-22
+状態：FROZEN（正式凍結）
 
-1. Purpose
-STEP 01 defines the logical data model of HOBS Object Manager.
-The HOBS Object is the central logical entity.
-MT5 Object is treated as a separate representation.
+======================================================================
+0. 文書ステータス
+======================================================================
 
-2. HOBS Object
-HOBS Object is the logical observation unit managed by HOBS Object Manager.
+本書は、以下の正式仕様候補である。
 
-Definition:
-"HOBS Objectとは、チャート上の特定の位置・領域・構造を観測対象として識別し、その形状・意味・状態・履歴を管理するための論理的観測単位である。"
+    HOBS Object Manager v0.1
+    STEP 01 — Data Model（データモデル）
 
-3. Identity
-Required:
-- object_id
+本Revisionでは、以下のBLOCKER解消内容を反映する。
 
-Rules:
-- HOBS Object ID is independent from MT5 Object ID/name.
-- ID is lifetime-unique.
-- ID is persistent across sessions.
-- ID is never reused.
-- MT5 Object existence is not a prerequisite for HOBS Object existence.
+    BLOCKER-01 — Delete
+    BLOCKER-02 — State
+    BLOCKER-03 — History
 
-4. Object Type
-Type is fixed at Object creation.
-v0.1 Type is immutable.
-Type is an enum, not free text.
+現在の査読状態：
 
-Geometry changes do not change Type.
-Meaning is independent from Type.
+    BLOCKER-01  CLOSED
+    BLOCKER-02  CLOSED
+    BLOCKER-03  CLOSED
+    BLOCKER-04  CLOSED
 
-Exact complete Type enumeration remains a separate specification item.
+STEP 01は、玲先生による反証査読、主任ちゃんによる実装監査、Final Audit Protocol、ならびに正式な凍結判断を完了し、FROZENとする。
 
-5. Geometry
-Geometry is type-aware and represents the actual observation geometry.
+FROZENに至るまでに、以下を完了した。
 
-Examples:
-- HORIZONTAL_LINE: price
-- TRENDLINE: point A / point B
-- BOX: left / right / top / bottom
+    1. 玲先生 — 反証査読
+    2. 主任ちゃん — 実装監査
+    3. BLOCKER-01〜04の解消
+    4. Final Audit Protocol
+    5. ハーベスターによる正式なFROZEN判断
 
-Geometry is associated with symbol and timeframe context.
+STEP 01で凍結された概念を、後続仕様が黙って再定義してはならない。
 
-A confirmed geometry change is a meaningful change and can produce one History event.
-Intermediate drag movement is not recorded.
+======================================================================
+1. 目的
+======================================================================
 
-6. Meaning
-Meaning consists of:
-- meaning_type
-- optional note
+STEP 01は、HOBS Object Manager v0.1の論理データモデルを定義する。
 
-Meaning is the observer's interpretation.
-Meaning is not a statement of absolute truth.
-Meaning can change independently of Type.
+目的は、以下を明確にすることである。
 
-Meaning changes are History events.
+    - HOBS Objectとは何か
+    - HOBS Objectにどの情報が属するか
+    - 現在のStateが何を意味するか
+    - Historyが何を意味するか
+    - Relationをどのように表現するか
+    - HOBS ObjectとMT5 Objectがどう異なるか
+    - どの境界を分離して維持しなければならないか
 
-7. State
-State enum:
-- CREATED
-- ACTIVE
-- OBSERVING
-- INVALIDATED
-- ARCHIVED
+中心となるアーキテクチャ上の前提は、
 
-Meaning and State are separate.
+    HOBS Object ≠ MT5 Object
 
-INVALIDATED:
-"現在のMeaningが観測上維持できなくなったことを示すHOBS Objectの状態"
+である。
 
-ARCHIVED:
-- non-active
-- read-only in principle in v0.1
-- Identity, History, Relations, etc. retained
+HOBS Objectは論理的な観測単位である。
+MT5 Objectは、その論理的観測単位をチャート上に表現するものである。
 
-8. History
-Proposed logical entity:
-HOBSHistoryEntry
+この区別は、データモデル全体で必須とする。
 
-Basic conceptual fields:
-- history_id
-- object_id
-- event_type
-- timestamp
-- before
-- after
+======================================================================
+2. HOBS Objectの定義
+======================================================================
 
-History records meaningful state/attribute changes.
-History is not an event log of every UI operation.
+HOBS Objectとは、
 
-History is separate from:
-- current State
-- UndoStack
-- RedoStack
+「チャート上の特定の位置・領域・構造を観測対象として識別し、
+その形状・意味・状態・履歴を管理するための論理的観測単位である。」
 
-9. Relation
-Proposed logical entity:
-HOBSRelation
+したがって、HOBS Objectは単なるグラフィカルなオブジェクトではない。
 
-Basic fields:
-- relation_type
-- target_type
-- target_id
+HOBS Object Managerが管理する観測管理情報について、
+HOBS ObjectがSource of Truth（正しい基準となる論理情報源）となる。
 
-v0.1 relation types:
-- OBSERVED_IN
-- SUPPORTED_BY
-- ASSOCIATED_WITH
-- DERIVED_FROM
-- PARENT_OF
+MT5上のチャート表現は、存在・消失・置換が起こり得る。
+それが起きても、HOBS Objectの論理的なIdentityは変更されない。
 
-SUPPORTED_BY:
-Evidence supports the Object's Meaning.
-It does not support the existence of the Object or the Observation itself.
+======================================================================
+3. Core Data Model（中核データモデル）
+======================================================================
 
-10. Provenance
-Conceptual fields:
-- creator
-- created_at
-- updated_at
+HOBS Objectは、概念上、以下のデータ領域から構成される。
 
-Creator candidates:
-- HUMAN
-- HOBS
-- IMPORTED
+    Identity
+    Type
+    Geometry
+    Meaning
+    State
+    History
+    Relations
+    Provenance
 
-11. Representation
-Proposed separate entity:
-HOBSRepresentation
+また、HOBS Objectの存在と変化を扱う設計上の概念／領域として、
+Lifecycleを定義する。
 
-Conceptual relationship:
-HOBS Object
-  -> Representation
-  -> MT5 Object
+LifecycleはHOBS Objectが保持する独立したデータ属性ではない。
+LifecycleそのものをStateまたは保存属性として保持しない。
 
-HOBS Object is Source of Truth.
-MT5 Object is Representation.
+以下は、意図的に別の関心事として分離する。
 
-Exact 1:1 / 1:N Representation cardinality and synchronization rules are deferred to a separate Representation Synchronization Specification.
+    Representation
+    Display
+    Protection
+    Undo / Redo
 
-12. Display / Protection
-Display and protection are separate from semantic/lifecycle data.
+これらはHOBS Objectと関係するが、
+Meaning、State、Historyに統合してはならない。
 
-Display:
-- Visibility
-- Color
-- Z-order
+======================================================================
+4. Identity（識別情報）
+======================================================================
 
-Protection:
-- Lock
+4.1 HOBS Object ID
 
-These do not belong to Meaning or State.
-They are not History in v0.1.
+必須フィールド：
 
-13. Undo / Redo
-Undo/Redo is an operation mechanism, not part of HOBS Object History.
+    object_id
 
-Undo:
-restore state immediately before the latest reversible operation.
+HOBS Object IDは、HOBS Objectの一意なIdentityである。
 
-Redo:
-reapply the cancelled operation.
+HOBS Object IDは、以下のMT5側識別子から独立している。
 
-UndoStack / RedoStack are distinct from HOBSHistory.
+    MT5 Object ID
+    Object name
+    Chart Object name
+    その他のMT5側識別子
 
-14. Data Model Invariants
-DM-INVARIANT-01
-HOBS Object ID is independent from MT5 Object ID.
+ルール：
 
-DM-INVARIANT-02
-HOBS Object ID is persistent, unique, and never reused.
+    1. HOBS Object IDは生涯一意である。
+    2. HOBS Object IDはセッションをまたいで保持される。
+    3. HOBS Object IDは再利用しない。
+    4. HOBS Object IDはセッション単位ではない。
+    5. MT5 Representationが変わっても、
+       HOBS Object IDは同一の論理ObjectのIdentityであり続ける。
+    6. Delete、Archive、Undo、アプリケーション再起動、
+       MT5 Objectの消失によって、既存のHOBS Object IDを
+       別Objectへ再割り当てしてはならない。
 
-DM-INVARIANT-03
-Object Type is immutable after creation.
+例：
 
-DM-INVARIANT-04
-Type and Meaning are distinct.
+    HOBS Object ID: HOBJ-0027
 
-DM-INVARIANT-05
-Meaning and State are distinct.
+MT5 Objectは、まったく異なる内部識別子や名前を持ってよい。
+両者のIdentityを同一視してはならない。
 
-DM-INVARIANT-06
-State and History are distinct.
+4.2 DeleteとIdentity
 
-DM-INVARIANT-07
-History and Undo/Redo are distinct.
+Deleteは、HOBS管理対象としてのHOBS Objectの存在を終了させる。
 
-DM-INVARIANT-08
-Relation and History are distinct.
+削除されたObject IDを、別のObjectへ再利用してはならない。
 
-DM-INVARIANT-09
-HOBS Object is Source of Truth; MT5 Object is Representation.
+Deleteが適用可能なUndo範囲内で取り消された場合、
+同じObject IDを復元する。
 
-DM-INVARIANT-10
-SUPPORTED_BY supports Object Meaning via Evidence only.
+Undoによって新しいHOBS Objectを作成してはならない。
 
-DM-INVARIANT-11
-Archive retains Identity, History, Relations, and other Object information.
+======================================================================
+5. Object Type（オブジェクト種別）
+======================================================================
 
-DM-INVARIANT-12
-Archive is read-only in principle in v0.1.
+5.1 定義
 
-15. STEP 01 Boundary
-The following are not finalized by STEP 01:
-- complete Object Type enum
-- Representation cardinality
-- MT5 Object disappearance synchronization
-- complete State Transition Matrix
-- Delete implementation
-- Archive implementation
-- internal Undo/Redo architecture
-- UI state model
-- Repository persistence
-- concrete MQL5 class design
+Object Typeは、HOBS Objectの基本的な幾何学的／オブジェクト種別を表す。
 
-These are handled in later specifications.
+TypeはHOBS Object作成時に決定される。
 
-Review Status:
-To be reviewed by 玲先生 (反証査読) and 主任ちゃん (実装監査).
-STEP 01 becomes FROZEN only after both reviews and resolution of any blockers.
+例：
+
+    BOX
+    HORIZONTAL_LINE
+    TRENDLINE
+
+これらはTypeという概念の例であり、
+完全なType列挙は別仕様項目で定義する。
+
+5.2 Typeの不変性
+
+v0.1では、
+
+    Object Typeは作成後に固定する。
+
+作成後にTypeを編集してはならない。
+
+Geometryの変更はTypeの変更ではない。
+
+5.3 TypeとMeaning
+
+TypeとMeaningは独立した概念である。
+
+例：
+
+    Type    = BOX
+    Meaning = RESISTANCE_CANDIDATE
+
+Meaningは変化しても、Typeは固定されたままでよい。
+
+観測に根本的に異なるTypeが必要になった場合、
+既存ObjectのTypeを変更するのではなく、新しいHOBS Objectを作成する。
+
+新しいObjectは、必要に応じてDERIVED_FROM等のRelationによって
+元Objectと関連付けることができる。
+
+======================================================================
+6. Geometry（形状・位置情報）
+======================================================================
+
+6.1 定義
+
+Geometryは、HOBS Objectが表す実際のチャート上の位置、領域、構造を表す。
+
+GeometryはTypeに応じた構造を持ち、
+以下のチャートコンテキストと関連する。
+
+    Symbol
+    Timeframe
+
+例：
+
+HORIZONTAL_LINE
+
+    price
+
+TRENDLINE
+
+    Point A
+    Point B
+
+BOX
+
+    Left
+    Right
+    Top
+    Bottom
+
+Geometryの具体的なシリアライズ形式は、
+実装／データスキーマ仕様へ委譲する。
+
+6.2 GeometryとType
+
+Geometryは変更されても、Typeは変更されない。
+
+例：
+
+    BOX
+    Top:    159.700 → 159.710
+    Bottom: 159.500 → 159.500
+
+これは同じBOX Objectである。
+
+6.3 Geometry変更とHistory
+
+意味のある、確定したGeometry変更はHistoryイベントとなる。
+
+ドラッグ途中の中間状態はHistoryに記録しない。
+
+例：
+
+    ドラッグ開始
+        ↓
+    ドラッグ中
+        ↓
+    複数の中間位置
+        ↓
+    ユーザーが最終位置を確定
+        ↓
+    1つのHistoryイベント：
+        Geometry Changed
+
+v0.1のHistory記録において、変更理由の記録は必須ではない。
+
+======================================================================
+7. Meaning（意味）
+======================================================================
+
+7.1 定義
+
+Meaningは、HOBS Objectに対する観測者の解釈を表す。
+
+概念上のフィールド：
+
+    meaning_type
+    note（任意）
+
+MeaningはObject Typeと同じものではない。
+
+また、Meaningは絶対的な真実を意味するものでもない。
+
+例：
+
+    RESISTANCE_CANDIDATE
+    SUPPORT_CANDIDATE
+    VOLUME_DECAY
+    UPWARD_MOMENTUM_WEAKENING_CANDIDATE
+
+これらは観測者が行った観測または解釈を表す。
+
+7.2 Meaningの変更
+
+MeaningはObjectのライフサイクル中に変化してよい。
+
+意味のあるMeaning変更はHistoryに記録する。
+
+例：
+
+    RESISTANCE_CANDIDATE
+        ↓
+    SUPPORT_CANDIDATE
+
+この場合でもObject Typeは、
+
+    BOX
+
+のままでよい。
+
+7.3 Meaningと真実
+
+Meaningは、観測者がその時点で持っている解釈状態を表す。
+
+HOBS Object Managerは、Meaningを自動的に客観的事実へ変換しない。
+
+この分離により、後からの観測、検証、反証が可能になる。
+
+======================================================================
+8. Lifecycle（ライフサイクル）
+======================================================================
+
+8.1 定義
+
+Lifecycleは、HOBS Objectの生成、State遷移、Archive、Delete等を含む、
+Objectの存在と変化を扱うライフサイクル上の概念／設計領域である。
+
+LifecycleはHOBS Objectが保持する独立したデータ属性ではない。
+
+したがって、
+
+    LifecycleそのものをStateとして保持しない。
+    Lifecycleそのものを独立した保存属性として保持しない。
+
+8.2 Stateとの関係
+
+StateはLifecycle上におけるHOBS Objectの現在の状態を表す。
+
+したがって、
+
+    Lifecycle = Objectの存在・変化を扱う設計上の概念
+    State     = Lifecycle上の現在の状態
+
+である。
+
+8.3 LifecycleとHistory
+
+Lifecycle上で発生する意味のある出来事・変更は、
+HOBS Object Historyとして記録される。
+
+したがって、
+
+    Lifecycle ≠ History
+
+である。
+
+HistoryはLifecycleそのものを保存するフィールドではなく、
+Lifecycle上で発生した意味のあるイベント／変更を記録する。
+
+8.4 LifecycleとDelete
+
+DeleteはLifecycle上の重要な操作であるが、
+DeleteはStateではない。
+
+DeleteによってHOBS管理対象としてのObjectの存在が終了する。
+
+8.5 LifecycleとArchive
+
+ArchiveはLifecycle上の操作であり、
+Stateを、
+
+    OBSERVING → ARCHIVED
+
+へ変更する。
+
+ArchiveはLifecycleそのものを別の属性値へ変更する操作ではない。
+
+======================================================================
+9. State（状態）
+======================================================================
+
+9.1 Stateの責務
+
+Stateは、
+
+    「現在、このHOBS Objectを観測対象として扱っているか、
+      過去の観測対象として保存しているか」
+
+を表す。
+
+Stateは、市場で何が起きたかを記録するものではない。
+
+Stateは、観測結果の良し悪しを表す欄ではない。
+
+Stateは、Meaningを表す欄ではない。
+
+Stateは、Historyを表す欄ではない。
+
+9.2 v0.1で採用するState
+
+採用するStateは以下の2つだけである。
+
+    OBSERVING
+    ARCHIVED
+
+STEP 01 v0.1では、これ以外のStateを採用しない。
+
+9.3 OBSERVING
+
+定義：
+
+    「現在、このHOBS Objectを観測対象として扱っている状態。」
+
+OBSERVINGは、現在このObjectを観測対象として使用している状態を表す。
+
+9.4 ARCHIVED
+
+定義：
+
+    「現在の観測対象ではないが、過去の観測対象として
+      保存している状態。」
+
+ARCHIVEDは、現在の観測対象ではないが、
+過去の観測対象として保持されている状態を表す。
+
+9.5 Object作成時の初期State
+
+正式に作成されたHOBS Objectは、以下の初期Stateを持つ。
+
+    OBSERVING
+
+これは、
+
+    CREATED → OBSERVING
+
+というState遷移ではない。
+
+CREATEDはStateではない。
+
+正式作成時点では、
+
+    History #001 = Object Created
+    Current State = OBSERVING
+
+となる。
+
+したがって、正式なHOBS ObjectがStateを持たない期間は存在しない。
+
+9.6 採用しないState
+
+v0.1では、以下をStateとして採用しない。
+
+    CREATED
+    ACTIVE
+    INVALIDATED
+
+CREATEDは、Object CreatedというHistoryイベントとして扱う。
+
+ACTIVEは、OBSERVINGとは異なる独立したライフサイクル上の責務が
+存在しないため、別Stateとして採用しない。
+
+INVALIDATEDは採用しない。
+
+観測結果が観測者の期待と異なったとしても、
+そのことだけを理由にStateを変更してはならない。
+
+例：
+
+    期待した結果と異なった
+        → StateはOBSERVINGのまま
+
+    Meaningが変化した
+        → StateはOBSERVINGのままでもよい
+          Meaning ChangedをHistoryに記録する
+
+    Geometryが変化した
+        → StateはOBSERVINGのままでもよい
+          Geometry ChangedをHistoryに記録する
+
+    一時的に使用頻度が下がった
+        → Archiveが明確に確定されない限りOBSERVINGのまま
+
+9.7 StateとHistory
+
+Stateは現在の状態を表す。
+
+HistoryはObjectに影響を与えた意味のある出来事・変更を表す。
+
+したがって、
+
+    State ≠ History
+
+である。
+
+9.8 Archive判断
+
+State遷移：
+
+    OBSERVING → ARCHIVED
+
+は、ハーベスターの最終判断によって確定する。
+
+先生はArchive候補を提示できる。
+
+Archive Candidate ≠ ARCHIVED
+
+である。
+
+候補が提示されたこと自体ではStateは変更しない。
+
+処理は以下のとおり。
+
+    観測を継続
+        ↓
+    先生がArchive候補を提示できる
+        ↓
+    ハーベスターが確認・判断
+        ↓
+    StateをARCHIVEDに変更
+
+システムは、以下の理由だけで自動的にArchiveしてはならない。
+
+    価格が動いた
+    時間が経過した
+    Meaningが変化した
+    Geometryが変化した
+    観測結果が期待と異なった
+
+判断に迷う場合：
+
+    Archiveしない
+    OBSERVINGを継続する
+
+9.9 Restore
+
+ARCHIVED → OBSERVING（Restore）はv0.1では定義しない。
+
+Restoreは将来の業務／ライフサイクル操作であり、
+STEP 01から暗黙的に導入してはならない。
+
+======================================================================
+10. History（履歴）
+======================================================================
+
+10.1 定義
+
+HOBS Object Historyは、以下のように定義する。
+
+    「History = HOBS Objectに発生した意味のある状態・属性変更の履歴」
+
+運用上、Historyは意味のあるHOBS Objectの出来事・変更を記録する。
+
+Historyは、すべてのUI操作を記録する完全な操作ログではない。
+
+10.2 History Entryの概念
+
+提案する論理エンティティ：
+
+    HOBSHistoryEntry
+
+概念上のフィールド：
+
+    history_id
+    object_id
+    event_type
+    timestamp
+    event-specific data（イベント固有データ）
+
+変更型イベントでは、イベント固有データとして以下を持ち得る。
+
+    before
+    after
+
+具体的なスキーマは、実装／データスキーマ仕様へ委譲する。
+
+10.3 Object Created
+
+正式なHOBS Object作成は、最初のHistoryイベントとして記録する。
+
+作成時に必要な情報：
+
+    作成時刻
+    作成時Geometry
+    作成時Meaning
+
+CreatorはObject属性として既に保持されるため、
+Historyへ重複記録することを必須としない。
+
+作成時：
+
+    History #001 = Object Created
+    Current State = OBSERVING
+
+10.4 Meaning Changed
+
+意味のあるMeaning変更は、
+
+    Meaning Changed
+
+として記録する。
+
+記録内容：
+
+    Before Meaning
+    After Meaning
+
+10.5 State Changed
+
+State変更は、
+
+    State Changed
+
+として記録する。
+
+記録内容：
+
+    Before State
+    After State
+
+v0.1で定義する通常の業務上のState遷移は、
+
+    OBSERVING → ARCHIVED
+
+である。
+
+10.6 Geometry Changed
+
+意味のある確定済みGeometry変更は、
+
+    Geometry Changed
+
+として記録する。
+
+記録内容：
+
+    Before Geometry
+    After Geometry
+
+ドラッグ途中の中間位置は記録しない。
+
+10.7 Relation Added / Removed
+
+Relation変更にはRelation固有のHistoryイベントを使用する。
+
+    Relation Added
+    Relation Removed
+
+記録には、対象となるRelation情報を含める。
+
+Relation CandidateそのものはHistoryイベントではない。
+
+確定したRelation AddedだけがRelationとなり、Historyに記録される。
+
+10.8 Derived Object
+
+新しいHOBS ObjectをDerived Objectとして作成した場合：
+
+    New Object
+        ↓
+    History #001 = Object Created
+        +
+    Relation Added:
+        source_id      = New Object
+        relation_type  = DERIVED_FROM
+        target_id      = Original Object
+
+DERIVED_FROMのtargetは元のObjectである。
+
+10.9 Alert
+
+AlertはHOBS Objectとは別のものである。
+
+その場の確認だけを目的とする一時的なAlertは、
+Historyとして保存しない。
+
+AlertをHOBSの観測管理情報として保持する価値がある場合は、
+記録してよい。
+
+例：
+
+    Alert Created
+    Alert Changed
+
+Alertを保持する具体的な運用基準は、
+Operation / UI仕様へ委譲する。
+
+10.10 一時的なチャート操作
+
+以下は、チャート上に表示されたというだけでは
+HOBS Objectではない。
+
+    一時的なサークル
+    一時的な確認マーク
+    一時的なハイライト
+    一時的な選択マーク
+    一時的なカーソル表示
+
+これらの一時的なチャート操作には、以下を付与しない。
+
+    HOBS Object ID
+    Object Treeへの登録
+    Meaning
+    State
+    Relation
+    HOBS History
+
+これらは長期保存するHOBS Object記録ではない。
+
+10.11 HistoryはUndo/Redoではない
+
+HOBS Historyは以下から分離する。
+
+    UndoStack
+    RedoStack
+
+Historyは意味のある出来事・変更を記述する。
+
+Undo/Redoは、可逆操作の仕組みを記述する。
+
+したがって、
+
+    History ≠ UndoStack
+    History ≠ RedoStack
+
+である。
+
+======================================================================
+11. Relation（関係）
+======================================================================
+
+11.1 定義
+
+Relationは、HOBS Object同士、またはHOBSの他の知識要素との
+明示的な論理関係を表す。
+
+時間的な関連、視覚的な近さ、因果関係の推測だけでは、
+自動的にRelationを作成しない。
+
+Relationは、保存する価値があると意図的に判断されたものとする。
+
+11.2 Relationの方向
+
+基本的なRelation方向は、
+
+    source_id → relation_type → target_id
+
+とする。
+
+概念上のエンティティ：
+
+    HOBSRelation
+
+概念上のフィールド：
+
+    source_id
+    relation_type
+    target_id
+    target_type（必要な場合）
+
+11.3 Relation Types
+
+v0.1のRelation Type：
+
+    OBSERVED_IN
+    SUPPORTED_BY
+    ASSOCIATED_WITH
+    DERIVED_FROM
+    PARENT_OF
+
+11.4 OBSERVED_IN
+
+OBSERVED_INは、ObjectとObservation Contextとの関係を表す。
+
+11.5 SUPPORTED_BY
+
+SUPPORTED_BYは意図的に狭い意味を持つ。
+
+意味：
+
+    Evidenceが、対象HOBS ObjectのMeaningを支持する。
+
+以下を自動的に意味するものではない。
+
+    EvidenceがObjectそのものの存在を支持する。
+
+また、以下を自動的に意味するものでもない。
+
+    EvidenceがObservationそのものを支持する。
+
+この境界はv0.1で必須とする。
+
+11.6 ASSOCIATED_WITH
+
+ASSOCIATED_WITHは、保存する価値がある関連を表す。
+
+それ自体では因果関係を主張しない。
+
+11.7 DERIVED_FROM
+
+DERIVED_FROMは、一方のHOBS Objectが別のObjectから派生して
+作られたことを表す。
+
+方向：
+
+    source_id     = 新しい／派生したObject
+    relation_type = DERIVED_FROM
+    target_id     = 元のObject
+
+Copy / Derived Object操作に適用する。
+
+11.8 PARENT_OF
+
+PARENT_OFは、HOBS Object間の論理的な親子関係を表す。
+
+PARENT_OFは表示順序の関係ではない。
+
+したがって、
+
+    PARENT_OF ≠ Z-order
+
+である。
+
+11.9 Relation Candidateのワークフロー
+
+通常の流れ：
+
+    先生がRelation候補を識別
+        ↓
+    先生がRelation Candidateを提示
+        ↓
+    ハーベスターは拒否できる
+        ↓
+    確定しなければRelationは作成しない
+        ↓
+    両者が保存価値のあるRelationと判断
+        ↓
+    Relation Added
+
+ユーザーは、チャート上のすべての操作について
+毎回Relationを考える必要はない。
+
+Relation Candidateは確定Relationではなく、
+Historyイベントでもない。
+
+11.10 Relation History
+
+確定したRelation AddedまたはRelation Removedは、
+意味のあるHOBS ObjectイベントとしてHistoryに記録する。
+
+======================================================================
+12. Provenance（来歴）
+======================================================================
+
+概念上のProvenanceフィールド：
+
+    creator
+    created_at
+    updated_at
+
+Creatorの候補：
+
+    HUMAN
+    HOBS
+    IMPORTED
+
+Provenanceは、ObjectがHOBSシステム内へどのように
+登録・生成されたかを識別する。
+
+具体的なProvenanceスキーマは、後続の実装仕様に委譲する。
+
+======================================================================
+13. Representation（表現）
+======================================================================
+
+13.1 定義
+
+HOBS Objectと、そのMT5チャート上のRepresentationは別のEntityである。
+
+概念モデル：
+
+    HOBS Object
+        ↓
+    Representation
+        ↓
+    MT5 Object
+        ↓
+    Chart
+
+提案する論理Entity：
+
+    HOBSRepresentation
+
+13.2 責務
+
+HOBS Objectは以下のSource of Truthである。
+
+    Identity
+    Meaning
+    State
+    History
+    Relations
+    Lifecycle上の意味・操作・遷移を扱う設計領域
+    その他の論理的な観測管理情報
+
+※ Lifecycleは独立した保存属性ではなく、HOBS Objectに関するライフサイクル上の意味・操作・遷移のSource of Truthとなる設計領域である。
+
+MT5 Objectはチャート上のRepresentationである。
+
+13.3 MT5 Objectの独立性
+
+以下を許容する。
+
+    HOBS ObjectはMT5 Objectなしで存在できる。
+    MT5 ObjectはHOBS登録なしで存在できる。
+
+MT5 Objectの存在は、HOBS Objectの存在条件ではない。
+
+MT5 Objectが消失しても、HOBS Objectは残存してよい。
+
+13.4 Representation Synchronization
+
+以下は意図的に後続仕様へ委譲する。
+
+    1:1 / 1:NのRepresentation Cardinality
+    MT5 Object消失時の処理
+    外部からのMT5 Object変更処理
+    同期ルール
+    不一致解消ルール
+    孤立Representationの処理
+
+これらは別途、
+
+    Representation Synchronization Specification
+
+で定義する。
+
+======================================================================
+14. Display（表示）
+======================================================================
+
+Display属性は、意味・ライフサイクル情報から分離する。
+
+概念上のDisplay属性：
+
+    Visibility
+    Color
+    Z-order
+
+これらは表示／管理上の属性である。
+
+以下ではない。
+
+    Meaning
+    State
+    History
+
+14.1 Visibility
+
+Visibilityは、Representationを表示するかどうかを制御する。
+
+Visibility変更はv0.1ではHistoryではない。
+
+14.2 Color
+
+Colorは表示属性である。
+
+Color変更はv0.1ではHistoryではない。
+
+14.3 Z-order
+
+Z-orderは表示順序を決定する。
+
+Z-orderは論理的な親子関係ではない。
+
+Z-orderはHistoryではない。
+
+Object Treeの並び順は、Z-order管理にも使用する。
+
+======================================================================
+15. Protection（保護）
+======================================================================
+
+ProtectionはDisplayから分離する。
+
+v0.1の主要なProtection属性は、
+
+    Lock
