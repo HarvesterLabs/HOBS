@@ -1,0 +1,1057 @@
+HOBS Object Manager
+STEP 02 — Lifecycle / State Transition Specification
+v0.1 Revision 3
+日本語正式仕様書
+
+============================================================
+0. 文書の位置づけ
+============================================================
+
+本書は、HOBS Object Manager v0.1 における
+「Lifecycle / State Transition（ライフサイクル / 状態遷移）」を
+正式に定義するための STEP 02 仕様書 Revision 3 である。
+
+本書は STEP 01 — Data Model v0.1 Revision 3 + Addendum 01
+を前提とし、HOBS Object の State と Lifecycle の境界、
+State 遷移条件、Archive、ARCHIVED Object の扱い、
+Lock、Copy / Derived、Delete 等のルールを定義する。
+
+本 Revision 3 では、玲先生による反証査読後、主任ちゃんの実装監査で指摘された
+BLOCKER-STEP02-01
+「ARCHIVED + LOCK 状態における Delete 可否」
+を解消するため、Lock の保護範囲を明文化した。
+
+本書は UI 操作仕様、具体的な実装方式、Repository 実装等を
+定義するものではない。
+
+------------------------------------------------------------
+0.1 上位仕様との関係
+------------------------------------------------------------
+
+本書の上位前提は以下とする。
+
+- STEP 01 Data Model v0.1 Revision 3
+- STEP 01 Data Model v0.1 Revision 3 Addendum 01
+
+STEP 01 で定義された以下の原則を本書でも維持する。
+
+- HOBS Object と MT5 Object は同一ではない。
+- State は HOBS Object の現在状態を表す。
+- Lifecycle は独立した保存属性ではなく、Object の生成・State
+  変更・Archive・Delete 等を含む設計概念である。
+- State 値は OBSERVING / ARCHIVED の2つだけである。
+- Delete は State ではない。
+- Delete された Object の History は Object とともに消滅する。
+- Archive は Object と History を保持する。
+- Undo は State Transition ではない。
+- History は意味のある状態・属性変更の履歴であり、単なる操作ログではない。
+
+------------------------------------------------------------
+0.2 Revision 3 の変更点
+------------------------------------------------------------
+
+Revision 3 では、Revision 2 の反証査読で指摘された
+文書整合性と Final Lifecycle Model の表現を修正する。
+
+1. 文書内の Revision 番号・Revision表記を Revision 3 に統一する。
+2. Final Lifecycle Model から、Archive Candidate が State 遷移である
+   と誤読できる表現を除去する。
+3. Archive Candidate Flow と State Transition を明確に分離する。
+4. 正式な State Transition が OBSERVING → ARCHIVED の一方向のみである
+   ことを Final Lifecycle Model 上でも明示する。
+5. Candidate Reject / Cancel は OBSERVING のままであり、
+   State Transition を発生させないことを図に明示する。
+6. Delete に伴う Relation 消滅の History 記録境界について、
+   STEP 01 Data Model v0.1 Revision 3 Addendum 01 を参照することを明示する。
+
+Revision 3 は State Model 自体を変更しない。
+既存の State、State Transition、Archive、Lock、Delete、
+Copy / Derived の基本ルールは維持する。
+
+
+============================================================
+1. State 定義
+============================================================
+
+HOBS Object Manager v0.1 における State は以下の2値のみとする。
+
+- OBSERVING
+- ARCHIVED
+
+以下は State 値ではない。
+
+- CREATED
+- ACTIVE
+- INVALIDATED
+- DELETED
+- RESTORED
+
+Creation、Delete、Undo、Restore 等は State 値ではなく、
+Lifecycle または Operation として扱う。
+
+------------------------------------------------------------
+1.1 OBSERVING
+------------------------------------------------------------
+
+OBSERVING は、現在も観測対象として扱われている Object を表す。
+
+HOBS Object の正式な初期 State は OBSERVING とする。
+
+Object Creation は State Transition ではない。
+
+Object Creation 時には、
+
+- Object が生成される
+- History #001 として Object Created が記録される
+- Current State は OBSERVING
+
+となる。
+
+------------------------------------------------------------
+1.2 ARCHIVED
+------------------------------------------------------------
+
+ARCHIVED は、Object の観測内容を固定し、
+その Object を過去の観測対象として保存する State である。
+
+ARCHIVED は観測内容の「正しさ」や「予測結果の良し悪し」を
+意味しない。
+
+ARCHIVED Object は、State、観測内容、Relation、History 等を
+変更できない。
+
+ただし、Lock されていない ARCHIVED Object については、
+Display 属性を変更できる。
+
+============================================================
+2. State 遷移
+============================================================
+
+v0.1 において正式に定義される State Transition は以下のみ。
+
+    OBSERVING
+        │
+        │ Archive 正式確定
+        ▼
+    ARCHIVED
+
+ARCHIVED → OBSERVING は v0.1 では定義しない。
+
+したがって Restore は State Transition として存在しない。
+
+------------------------------------------------------------
+2.1 State Transition の単一原則
+------------------------------------------------------------
+
+既存 HOBS Object の State を変更できるのは、
+Harvester による Archive の正式確定のみとする。
+
+市場イベント、Object 内部変更、Display 変更、
+Lock / Unlock、Archive Candidate、Copy / Derived、Delete 等は、
+既存 Object の State Transition を発生させない。
+
+------------------------------------------------------------
+2.2 State Transition と新規 Object
+------------------------------------------------------------
+
+Copy / Derived によって新しい Object が生成された場合、
+新 Object の初期 State は OBSERVING とする。
+
+これは元 Object の State Transition ではない。
+
+============================================================
+3. State 遷移の発生条件
+============================================================
+
+State Transition は、以下の条件をすべて満たした場合にのみ発生する。
+
+1. 対象 Object の Current State が OBSERVING である。
+2. Archive Candidate ではなく、正式な Archive 確定である。
+3. Harvester が正式に Archive を確定する。
+4. State Change と、それに対応する History 記録が整合した形で
+   確定する。
+
+正式確定後は、
+
+State:
+    OBSERVING → ARCHIVED
+
+History:
+    OBSERVING → ARCHIVED
+
+を記録する。
+
+============================================================
+4. Archive Candidate
+============================================================
+
+Archive Candidate は、Object を Archive する候補・提案である。
+
+Archive Candidate は ARCHIVED State ではない。
+
+したがって、
+
+    Archive Candidate
+            ≠
+       ARCHIVED
+
+である。
+
+Teacher は Archive Candidate を提示できる。
+
+ただし Teacher は HOBS Object の State を直接変更しない。
+
+System による自動 Archive も禁止する。
+
+------------------------------------------------------------
+4.1 Candidate の拒否・取消
+------------------------------------------------------------
+
+Harvester が Archive Candidate を拒否または取消した場合、
+
+- State は OBSERVING のまま
+- Archive History は生成しない
+
+とする。
+
+Candidate の提示、拒否、取消そのものは
+HOBS Object History には含めない。
+
+============================================================
+5. Archive 正式確定
+============================================================
+
+Harvester が Archive を正式確定した場合、
+
+    OBSERVING → ARCHIVED
+
+の State Transition を実行する。
+
+この State Transition は HOBS Object History に記録する。
+
+Archive 正式確定と State Change と対応する History 記録は、
+論理的に一つのまとまった処理として扱う。
+
+State と History の一方だけが確定した不整合状態を許容しない。
+
+------------------------------------------------------------
+5.1 Archive 処理失敗
+------------------------------------------------------------
+
+State または History の確定に失敗した場合、
+
+- Current State は OBSERVING
+- Archive State Change は確定しない
+- Archive に対応する History は確定しない
+
+とする。
+
+============================================================
+6. 自動 Archive の禁止
+============================================================
+
+以下の事象単独では Archive を確定してはならない。
+
+- 時間経過
+- 未使用状態
+- 価格による Geometry 突破
+- Meaning との不一致
+- 予想外の結果
+- Geometry 変更
+- 市場イベント
+- System 判定
+- Teacher による Archive Candidate 提示
+
+これらは Archive 判断の材料となり得るが、
+それ自体では State Transition を発生させない。
+
+============================================================
+7. OBSERVING State
+============================================================
+
+OBSERVING 中の Object は、後続の Operation Specification で
+許可される範囲において編集・Relation・Display・Lock 等の
+操作対象となる。
+
+以下の操作・事象は、それ自体では State Transition を発生させない。
+
+- Meaning 変更
+- Geometry 変更
+- Relation 追加
+- Relation 変更
+- Relation 削除
+- Display 変更
+- Lock
+- Unlock
+- Select
+- Focus
+- Copy
+- Derived
+- Alert
+- Delete
+
+Delete は State Transition ではなく Object の消滅である。
+
+============================================================
+8. ARCHIVED State
+============================================================
+
+ARCHIVED Object は、観測内容を固定された過去の観測対象として扱う。
+
+以下は固定される。
+
+- Meaning
+- Geometry
+- State
+- Relation
+- History
+
+したがって以下は禁止する。
+
+- Meaning 変更
+- Geometry 変更
+- State 変更
+- Relation 追加
+- Relation 削除
+- Relation 内容変更
+- History 追加
+- Restore
+
+------------------------------------------------------------
+8.1 ARCHIVED Object の State
+------------------------------------------------------------
+
+ARCHIVED Object の State は ARCHIVED のまま固定される。
+
+時間経過、市場変化、新しい Evidence、
+MT5 / HOBS の再起動等によって自動的に変更されない。
+
+============================================================
+9. ARCHIVED Object の参照
+============================================================
+
+ARCHIVED Object は、内容が固定されていても参照可能である。
+
+許可される参照操作：
+
+- Select
+- Focus
+- Detail 閲覧
+- History 閲覧
+- Relation 閲覧
+- Chart 上での表示
+- Highlight
+- Copy / Derived
+
+ARCHIVED Object の Delete は、Lock されていない場合に限り可能とする。
+
+すなわち、
+
+    ARCHIVED + UNLOCKED
+        → Delete 可能
+
+    ARCHIVED + LOCKED
+        → Delete 不可
+
+とする。
+
+============================================================
+10. ARCHIVED Object の変更禁止
+============================================================
+
+ARCHIVED Object に対して、観測内容を変更する操作はできない。
+
+特に以下を禁止する。
+
+- Meaning 編集
+- Geometry 編集
+- State 編集
+- Relation 編集
+- History 編集
+- Chart 上の Geometry 直接編集
+- Restore
+
+ARCHIVED Object を再び観測対象として扱いたい場合は、
+既存 Object を変更せず、新しい Object を Copy / Derived により
+作成する。
+
+============================================================
+11. ARCHIVED Object の Display
+============================================================
+
+ARCHIVED Object の観測内容は固定されるが、
+Display 属性は Lock されていない場合に変更できる。
+
+対象：
+
+- Visibility
+- Color
+- Z-order
+- その他 STEP 01 で Display 属性として定義された項目
+
+Display 変更は HOBS Object History に記録しない。
+
+Archive によって自動的に Hide されることもない。
+
+============================================================
+12. ARCHIVED + LOCK
+============================================================
+
+ARCHIVED Object に Lock が設定された場合、
+Lock は Object そのものを保護する。
+
+Lock は、以下の変更・削除を禁止する。
+
+- Meaning 変更
+- Geometry 変更
+- State 変更
+- Relation 追加
+- Relation 削除
+- Relation 変更
+- History 追加
+- Display 変更
+- Delete
+
+したがって、
+
+    ARCHIVED + LOCK
+        → Object の変更不可
+        → Object の Delete 不可
+
+である。
+
+------------------------------------------------------------
+12.1 ARCHIVED + LOCK で許可される操作
+------------------------------------------------------------
+
+Lock は参照そのものを禁止しない。
+
+以下は引き続き可能とする。
+
+- Select
+- Focus
+- Detail 閲覧
+- History 閲覧
+- Relation 閲覧
+- Copy
+- Derived
+
+Copy / Derived は元 Object を変更しないため、
+Lock の保護範囲と矛盾しない。
+
+------------------------------------------------------------
+12.2 Unlock
+------------------------------------------------------------
+
+Unlock によって、Display 属性等の許可された変更が
+再び可能になる。
+
+Unlock によって State が変更されることはない。
+
+ARCHIVED は引き続き ARCHIVED のままである。
+
+Lock / Unlock 自体は HOBS Object History に記録しない。
+
+============================================================
+13. Archive Restore
+============================================================
+
+ARCHIVED → OBSERVING の Restore は v0.1 では定義しない。
+
+したがって、
+
+    ARCHIVED
+        ×
+        ↓
+    OBSERVING
+
+である。
+
+再び観測対象として扱いたい場合は、
+Copy / Derived により新しい Object を作成する。
+
+新しい Object の State は OBSERVING となる。
+
+============================================================
+14. Copy
+============================================================
+
+Copy は、既存 Object を基礎として新しい Object を作成する操作である。
+
+Copy は元 Object の State Transition ではない。
+
+新 Object は、
+
+    State = OBSERVING
+
+から開始する。
+
+------------------------------------------------------------
+14.1 Copy で引き継がないもの
+------------------------------------------------------------
+
+以下は新 Object にそのまま引き継がない。
+
+- Object ID
+- State
+- History
+- Relation
+
+新 Object は独自の Object ID、State、History を持つ。
+
+Geometry、Meaning、必要な Display 設定等の
+具体的な Copy 範囲は STEP 03 で定義する。
+
+------------------------------------------------------------
+14.2 ARCHIVED Object からの Copy
+------------------------------------------------------------
+
+ARCHIVED Object から Copy を作成することは可能である。
+
+元の ARCHIVED Object は変更されない。
+
+新 Object は OBSERVING で開始する。
+
+============================================================
+15. Derived
+============================================================
+
+Derived は、既存 Object を基礎として新しい意味を持つ
+Object を生成する操作である。
+
+Derived によって生成された新 Object は、
+
+    State = OBSERVING
+
+で開始する。
+
+元 Object の、
+
+- Object ID
+- State
+- History
+- Relation
+
+を継承しない。
+
+ただし Derived Object と元 Object の間には、
+
+    New Object
+        │
+        │ DERIVED_FROM
+        ▼
+    Original Object
+
+の Relation を登録する。
+
+この Relation の具体的な操作仕様は STEP 03 で定義する。
+
+ARCHIVED Object からの Derived も可能である。
+
+元の ARCHIVED Object は変更されない。
+
+ARCHIVED + LOCK の Object からの Derived も可能である。
+
+============================================================
+16. Delete
+============================================================
+
+Delete は HOBS Object の State Transition ではない。
+
+Delete は HOBS Object そのものを消滅させる。
+
+したがって DELETED は State ではない。
+
+------------------------------------------------------------
+16.1 Delete の基本
+------------------------------------------------------------
+
+通常、
+
+    OBSERVING ──Delete──→ Object 消滅
+    ARCHIVED  ──Delete──→ Object 消滅
+
+となる。
+
+ただし、
+
+    LOCKED Object ──Delete──→ 禁止
+
+とする。
+
+したがって、
+
+    ARCHIVED + UNLOCKED
+        → Delete 可能
+
+    ARCHIVED + LOCKED
+        → Delete 不可
+
+である。
+
+------------------------------------------------------------
+16.2 Delete と History
+------------------------------------------------------------
+
+Delete された Object の HOBS Object History は、
+STEP 01 の原則に従い Object とともに消滅する。
+
+Delete 操作そのものは、Delete 後に残る HOBS Object History
+として扱わない。
+
+Deleteに伴うRelation消滅のHistory記録境界については、
+STEP 01 Data Model v0.1 Revision 3 Addendum 01 に従う。
+
+------------------------------------------------------------
+16.3 Delete Undo
+------------------------------------------------------------
+
+Delete Undo が可能な場合、Undo は State Transition ではない。
+
+Undo は Delete 直前の Object を、
+同一 Object ID で復元する。
+
+復元される State は Delete 直前の State とする。
+
+例：
+
+    OBSERVING
+       ↓
+     Delete
+       ↓
+    Object 消滅
+       ↓
+      Undo
+       ↓
+    OBSERVING
+
+または、
+
+    ARCHIVED + UNLOCKED
+       ↓
+     Delete
+       ↓
+    Object 消滅
+       ↓
+      Undo
+       ↓
+    ARCHIVED + UNLOCKED
+
+とする。
+
+ARCHIVED + LOCKED Object は Delete 自体が禁止されるため、
+Delete Undo の対象にもならない。
+
+============================================================
+17. State と Market Event の分離
+============================================================
+
+市場上で発生した出来事は、それ自体では HOBS Object の
+State Transition を発生させない。
+
+例えば、
+
+- Price が Geometry を突破した
+- Volume が変化した
+- Market Event が発生した
+- Event 結果が予想と異なった
+
+等が発生しても、
+
+    OBSERVING → ARCHIVED
+
+とはならない。
+
+Market Event は Market 上の出来事であり、
+Object Lifecycle は Object の管理状態である。
+
+両者を同一視しない。
+
+============================================================
+18. State と Object 内部変更の分離
+============================================================
+
+Object 内部の属性変更も、それ自体では State Transition を発生させない。
+
+例えば、
+
+    Meaning Changed
+        ↓
+    OBSERVING
+
+    Geometry Changed
+        ↓
+    OBSERVING
+
+    Relation Added
+        ↓
+    OBSERVING
+
+    Display Changed
+        ↓
+    OBSERVING
+
+である。
+
+State Transition は Archive 正式確定によってのみ発生する。
+
+============================================================
+19. State と History
+============================================================
+
+State と History は異なる役割を持つ。
+
+State：
+    現在の State を表す。
+
+History：
+    Object に発生した意味のある状態・属性変更の履歴を表す。
+
+State が変更された場合、その State Change は History に記録される。
+
+したがって ARCHIVED Object では、
+
+    Current State = ARCHIVED
+
+であり、
+
+    History の最後の State Change
+        = OBSERVING → ARCHIVED
+
+となる。
+
+ARCHIVED 後に State、Meaning、Geometry、Relation 等の
+変更が禁止されるため、Archive 後に新しい State Change
+History を追加しない。
+
+============================================================
+20. State Invariants
+============================================================
+
+INV-01 State Enum
+
+State は OBSERVING または ARCHIVED のみである。
+
+INV-02 State Transition
+
+既存 Object の正式な State Transition は、
+
+    OBSERVING → ARCHIVED
+
+のみである。
+
+INV-03 Archive Formal Confirmation
+
+State を ARCHIVED に変更できるのは、
+Harvester による Archive 正式確定のみである。
+
+INV-04 Current State / History Consistency
+
+Current State と State Change History は整合していなければならない。
+
+ARCHIVED の場合、History に OBSERVING → ARCHIVED の記録が存在する。
+
+INV-05 No Automatic Archive
+
+時間、Market Event、Meaning、Geometry、System 判定等によって
+自動的に ARCHIVED に変更してはならない。
+
+INV-06 No Restore
+
+ARCHIVED → OBSERVING は v0.1 では定義しない。
+
+INV-07 Delete ≠ State
+
+Delete は State Transition ではなく Object の消滅である。
+DELETED は State ではない。
+
+INV-08 New Object Initial State
+
+Copy / Derived 等によって新しい Object が生成された場合、
+新 Object の初期 State は OBSERVING である。
+
+INV-09 Lock Protects Delete
+
+Lock された Object は Delete できない。
+
+INV-10 ARCHIVED + LOCK Protection
+
+ARCHIVED + LOCK の Object は、
+観測内容、Relation、History、Display を変更できず、
+Delete もできない。
+
+INV-11 Reference Preservation
+
+Lock は Select、Focus、閲覧、Copy、Derived 等の
+参照・派生利用を禁止しない。
+
+============================================================
+21. Lifecycle / State / Operation Boundary
+============================================================
+
+Lifecycle は Object の生成、State 変更、Archive、Delete 等を
+含む設計概念である。
+
+State は Lifecycle 上の現在状態である。
+
+Operation は Object に対して実行される個々の操作である。
+
+------------------------------------------------------------
+21.1 OBSERVING
+------------------------------------------------------------
+
+OBSERVING Object：
+
+- 許可された編集が可能
+- Relation 操作が可能
+- Display 操作が可能
+- Lock / Unlock が可能
+- Archive Candidate の対象となる
+- Archive 正式確定によって ARCHIVED へ遷移する
+- Delete が可能（Lock されていない場合）
+
+------------------------------------------------------------
+21.2 ARCHIVED
+------------------------------------------------------------
+
+ARCHIVED Object：
+
+- 観測内容固定
+- State 固定
+- Relation 固定
+- History 固定
+- Select / Focus / 閲覧可能
+- Display 変更可能（Unlock 時）
+- Copy / Derived 可能
+- Delete 可能（Unlock 時）
+- Restore 不可
+
+------------------------------------------------------------
+21.3 ARCHIVED + LOCK
+------------------------------------------------------------
+
+ARCHIVED + LOCK Object：
+
+- 観測内容変更不可
+- State 変更不可
+- Relation 変更不可
+- History 追加不可
+- Display 変更不可
+- Delete 不可
+- Select / Focus / 閲覧可能
+- Copy / Derived 可能
+- Unlock 可能
+- Unlock 後も State は ARCHIVED
+
+============================================================
+22. Final Lifecycle Model
+============================================================
+
+Archive Candidate Flow と State Transition は分離して表現する。
+
+------------------------------------------------------------
+22.1 Archive Candidate Flow
+------------------------------------------------------------
+
+Archive Candidate は State ではなく、
+Archive 判断のための候補・提案である。
+
+    Archive Candidate
+            │
+            │ Candidate提示・判断材料
+            ▼
+    Harvesterによる正式判断
+            │
+            ├──────────────→ Reject / Cancel
+            │                    │
+            │                    ▼
+            │              OBSERVINGのまま
+            │
+            │ Archive正式確定
+            ▼
+       State Transition
+            │
+            ▼
+    OBSERVING → ARCHIVED
+
+------------------------------------------------------------
+22.2 State Transition
+------------------------------------------------------------
+
+v0.1 における正式な State Transition は一方向のみである。
+
+    OBSERVING
+            │
+            │ HarvesterによるArchive正式確定
+            ▼
+    ARCHIVED
+
+以下は State Transition ではない。
+
+- Archive Candidate の提示
+- Archive Candidate の Reject / Cancel
+- Meaning 変更
+- Geometry 変更
+- Relation 変更
+- Display 変更
+- Lock / Unlock
+- Copy / Derived
+- Delete
+- Delete Undo
+- Market Event
+- その他の市場上の出来事
+
+------------------------------------------------------------
+22.3 ARCHIVED Object
+------------------------------------------------------------
+
+ARCHIVED Object：
+
+    ARCHIVED
+            │
+            ├─ Read / Focus / Reference
+            ├─ Display change*
+            ├─ Copy / Derived
+            └─ Delete*
+
+            * Lock 時は禁止
+
+ARCHIVED から OBSERVING への State Transition は定義しない。
+
+    ARCHIVED
+            │
+            └──×──→ OBSERVING
+
+------------------------------------------------------------
+22.4 Lock を含む場合
+------------------------------------------------------------
+
+    ARCHIVED + UNLOCKED
+            │
+           Lock
+            ▼
+    ARCHIVED + LOCKED
+            │
+            ├─ Read / Focus / Reference
+            ├─ Copy / Derived
+            └─× Delete
+
+ARCHIVED + LOCKED から Unlock した場合：
+
+    ARCHIVED + LOCKED
+            │
+            │ Unlock
+            ▼
+    ARCHIVED + UNLOCKED
+
+State は変化しない。
+
+------------------------------------------------------------
+22.5 Lifecycle Model の原則
+------------------------------------------------------------
+
+Archive Candidate は State ではない。
+
+Candidate の提示・Reject / Cancel は、
+既存 Object の State を変更しない。
+
+Harvesterによる Archive 正式確定だけが、
+
+    OBSERVING → ARCHIVED
+
+を発生させる。
+
+この State Transition は一方向であり、
+ARCHIVED → OBSERVING は v0.1 では定義しない。
+
+
+============================================================
+23. STEP 02 Completion Criteria
+============================================================
+
+STEP 02 の完了条件は以下とする。
+
+1. State 値が OBSERVING / ARCHIVED の2つに限定されている。
+2. 正式な State Transition が OBSERVING → ARCHIVED のみに限定されている。
+3. Archive Candidate と Archive 正式確定が分離されている。
+4. Harvester の正式確定が State Transition の唯一の発生条件である。
+5. 自動 Archive が禁止されている。
+6. ARCHIVED Object の観測内容が固定されている。
+7. ARCHIVED → OBSERVING が未定義である。
+8. Copy / Derived により新 Object が OBSERVING で生成される。
+9. Delete が State ではないことが明確である。
+10. Delete Undo が State Transition ではないことが明確である。
+11. State と History の整合性が定義されている。
+12. Market Event と Object Lifecycle が分離されている。
+13. Object 内部変更と State Transition が分離されている。
+14. Lock の保護範囲が定義されている。
+15. ARCHIVED + LOCK では Delete が禁止されることが明記されている。
+16. Copy / Derived は Lock によって禁止されないことが明記されている。
+17. UI / Implementation の詳細が後続 STEP に委譲されている。
+18. STEP 01との整合性が維持されている。
+19. Final Lifecycle Model が Archive Candidate を State と誤読させず、
+    Candidate Flow と State Transition を分離して表現している。
+20. Final Lifecycle Model において、正式な State Transition が
+    OBSERVING → ARCHIVED の一方向のみであることが明示されている。
+21. Delete に伴う Relation 消滅について STEP 01 Data Model v0.1
+    Revision 3 Addendum 01 への参照が明示されている。
+
+
+============================================================24. Review / Freeze Status
+============================================================
+
+Document Status:
+
+    FROZEN
+
+Freeze Status:
+
+    FORMALLY FROZEN BY HARVESTER
+    HOBS Final Audit Protocol completed.
+
+Revision:
+
+    v0.1 Revision 3
+
+Revision 3 の主な修正：
+
+    ① Revision metadata の統一
+       文書内に残っていた Revision 1 / Revision 2 の表記を整理し、
+       本書を Revision 3 として統一した。
+
+    ② Final Lifecycle Model の表現修正
+       Archive Candidate と State Transition を分離した。
+
+       Archive Candidate：
+           Candidate提示・判断材料
+               ↓
+           Harvester正式判断
+               ├─ Reject / Cancel → OBSERVINGのまま
+               └─ Archive正式確定
+                       ↓
+                   State Transition
+                       ↓
+                   OBSERVING → ARCHIVED
+
+       正式な State Transition は OBSERVING → ARCHIVED の一方向のみである。
+
+    ③ STEP 01 Addendum 01 参照
+       Delete に伴う Relation 消滅の History 記録境界について、
+       STEP 01 Data Model v0.1 Revision 3 Addendum 01 に従うことを明記した。
+
+    ④ 既存の設計ルールは変更しない
+       State、Archive、Lock、Delete、Copy / Derived、
+       State / History 整合性等の既存ルールは維持する。
+
+確定状態：
+
+1. 玲先生による Revision 3 全体反証査読：完了
+2. 主任ちゃんによる Revision 3 実装監査：完了
+3. HOBS Final Audit Protocol：完了
+4. ハーベスターによる正式 FROZEN 判断：完了
+
+本書は HOBS Object Manager v0.1 STEP 02 の正式 FROZEN 仕様である。
+
+============================================================
+END OF DOCUMENT
+============================================================
