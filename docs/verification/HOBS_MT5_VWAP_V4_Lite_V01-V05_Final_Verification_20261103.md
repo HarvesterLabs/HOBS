@@ -1,32 +1,36 @@
-# HOBS MT5 VWAP V4 Lite — V-01〜V-05 Final Verification Summary
+# HOBS MT5 VWAP V4 Lite — V-01〜V-05 最終検証結果
 
-- **Record date:** 2026-11-03
-- **Test data date:** 2026-11-02
-- **Environment:** MT5 (Axiory), USDJPY_z / M1 unless noted
-- **Indicator:** HOBS MT5 VWAP V4 Lite
-- **Overall status:** **PASS — V-01〜V-05 verification closed**
-- **Scope note:** V-03 date-boundary behavior was verified with the available test data. Verification on the actual seasonal DST transition date remains pending until the next DST change.
+- **記録日：** 2026-11-03
+- **検証データ日：** 2026-11-02
+- **検証環境：** MT5（Axiory）、USDJPY_z / M1（特記がない場合）
+- **対象インジケーター：** HOBS MT5 VWAP V4 Lite
+- **総合判定：** **PASS — V-01〜V-05の検証完了**
+- **範囲に関する注記：** V-03の日付境界における挙動は、取得可能な検証データで確認済み。実際の季節性DST切替日における検証は、次回のDST変更時に実施予定。
 
-## Final results
+## 最終検証結果
 
-| Test | Verification area | Result | Evidence / notes |
+| 検証項目 | 検証領域 | 判定 | 証拠・備考 |
 |---|---|---|---|
-| V-01 | Basic function test | **PASS** | Indicator starts normally; VWAP line draws correctly; calculation and updates operate; chart display is correct. |
-| V-02 | Numerical verification test | **PASS** | 1,424 USDJPY_z M1 bars; independent calculation matched; 0 errors; all 1,424 target bars compared; maximum error 0. |
-| V-03 | DST / date-boundary test | **PASS (scope-qualified)** | Date-boundary VWAP reset behavior verified. MT5 (Axiory) and TradingView (Pepperstone) reset times were nearly identical in the observed interval; post-reset VWAP updates behaved as expected. Actual DST transition-date verification remains pending. |
-| V-04 | Real-time update test | **PASS** | Real-time update and M1 bar-transition update OK; volume increase 31; OHLC changes 31; 316 bars compared; failures 0; maximum error 0. |
-| V-05 | Reproducibility test | **PASS** | Chart regeneration OK; post-regeneration Buffer0 matched; calculation consistency OK; 1,424 of 1,424 bars matched; maximum error 0. |
+| V-01 | 基本動作テスト | **PASS** | インジケーターが正常に起動。VWAPラインの描画、計算・更新、チャート表示が正常であることを確認。 |
+| V-02 | 数値検証テスト | **PASS** | USDJPY_z M1の1,424本を対象に独立計算を実施し、完全一致を確認。エラー0件、比較対象1,424本、最大誤差0。 |
+| V-03 | DST／日付境界テスト | **PASS（検証範囲を限定）** | 日付境界におけるVWAPリセット挙動を確認。観測区間ではMT5（Axiory）とTradingView（Pepperstone）のリセット時刻はほぼ一致し、リセット後のVWAP更新も想定どおり。実際のDST切替日での検証は今後実施予定。 |
+| V-04 | リアルタイム更新テスト | **PASS** | リアルタイム更新およびM1バー遷移時の更新が正常。Volume増加31、OHLC変化31、316本を比較、失敗0件、最大誤差0。 |
+| V-05 | 再現性テスト | **PASS** | チャート再生成が正常。再生成後のBuffer0一致、計算整合性を確認。1,424本中1,424本が一致、最大誤差0。 |
 
-## V-03 scope and interpretation
+## V-03の検証範囲と解釈
 
-The V-03 retest used real data around the date boundary (2026-11-02, MT5 00:16–00:30 corresponding to TradingView 07:16–07:30, UTC+7 display offset in the comparison). The MT5 and TradingView VWAP reset timing was nearly identical, and both series continued updating after the reset.
+V-03の再検証では、日付境界付近の実データを使用した（2026-11-02、MT5 00:16〜00:30、TradingView 07:16〜07:30に対応。比較時の表示時刻差はUTC+7）。
 
-Broker feeds differ (MT5 Axiory vs TradingView Pepperstone), so exact OHLC/VWAP equality is not expected. The observed small value differences are treated as potential broker-rate differences, not as evidence of an MT5 calculation defect.
+MT5とTradingViewのVWAPリセット時刻はほぼ一致し、リセット後も両方のVWAP系列が継続して更新されることを確認した。
 
-**Pending follow-up:** Verify behavior on the actual DST transition date (seasonal time change) when that date occurs. This pending seasonal check does not invalidate the current V-03 PASS for the tested date-boundary behavior.
+ブローカー配信レートは異なる（MT5：Axiory、TradingView：Pepperstone）ため、OHLCやVWAP値の完全一致は前提としない。観測された小さな数値差は、MT5の計算不具合を示す証拠ではなく、ブローカー間のレート差による可能性が高いものとして扱う。
 
-## Final judgment
+**今後の確認事項：** 実際のDST切替日（季節性の時刻変更日）に、該当日のデータで挙動を検証する。この季節性確認は今後のフォローアップであり、今回検証した日付境界挙動に対するV-03 PASS判定を取り消すものではない。
 
-Within the executed verification scope, HOBS MT5 VWAP V4 Lite passed the basic-function, numerical-accuracy, date-boundary behavior, real-time-update, and reproducibility tests. V-01 through V-05 are recorded as **PASS**, and this verification cycle is **CLOSED**.
+## 最終判定
 
-Future DST transition-date verification is tracked as a scheduled follow-up, not as an open failure in this completed test cycle.
+実施した検証範囲において、HOBS MT5 VWAP V4 Liteは、基本動作、数値精度、日付境界挙動、リアルタイム更新、再現性の各テストに合格した。
+
+V-01〜V-05はすべて **PASS** と記録し、本検証サイクルを **CLOSED（完了）** とする。
+
+次回のDST切替日に実施する検証は、完了済みの本検証サイクルにおける未解決不具合ではなく、予定された追加確認として管理する。
